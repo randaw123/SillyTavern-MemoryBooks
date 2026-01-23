@@ -819,7 +819,7 @@ export async function runSidePrompt(args) {
             }
 
         toastr.success(__st_t_tag`SidePrompt "${tpl.name}" updated.`, 'STMemoryBooks');
-        return '';
+        return resultText;
     } catch (outer) {
         return '';
     }
