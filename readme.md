@@ -11,6 +11,7 @@ A next-generation SillyTavern extension for automatic, structured, and reliable 
 
 Start here: 
 * ⚠️‼️Please read [prerequisites](#-prerequisites) for installation notes (especially if you run Text Completion API)
+* 📽️ [Quickstart Video](https://youtu.be/mG2eRH_EhHs) - English only (sorry, that's the language I am most fluent in)
 * ❓ [Frequently Asked Questions](#FAQ)
 * 🛠️ [Troubleshooting](#Troubleshooting)
 
@@ -403,6 +404,35 @@ No. If there are no other world info or lorebooks, selecting 'Delay until recurs
 - **Blocked:** Only Unicode control characters (U+0000–U+001F, U+007F–U+009F) are blocked; these are removed automatically.
 
 See [Character Policy Details](charset.md) for examples and migration notes.
+
+---
+
+## 👨‍💻 For Developers
+
+### Building the Extension
+
+This extension uses Bun for building. The build process minifies and bundles the source files.
+
+```sh
+# Build the extension
+bun run build
+```
+
+### Git Hooks
+
+The project includes a pre-commit hook that automatically builds the extension and includes the build artifacts in your commits. This ensures the built files are always in sync with the source code.
+
+**To install the git hook:**
+
+```sh
+bun run install-hooks
+```
+
+The hook will:
+- Run `bun run build` before each commit
+- Add build artifacts to the commit
+- Abort the commit if the build fails
+
 ---
 
 *Developed with love using VS Code/Cline, extensive testing, and community feedback.* 🤖💕

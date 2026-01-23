@@ -516,6 +516,9 @@ export async function runArcAnalysisSequential(
   const allBriefs = buildBriefsFromEntries(rawEntries);
   const remainingMap = new Map(allBriefs.map((b) => [b.id, b]));
   const acceptedArcs = [];
+  // Keep the latest raw model output for UX/debug (used when no usable arcs are produced).
+  let lastRawText = "";
+  let lastRetryRawText = "";
 
   // Resolve prompt text
   let promptText = null;
@@ -573,7 +576,7 @@ export async function runArcAnalysisSequential(
     let prompt = buildArcAnalysisPrompt({
       briefs: batch, // use the current batch
       previousArcSummary, // existing summary string
-      previousArcOrder: null, // numeric order of the previous arc, or null
+      previousArcOrder: previousArcOrderValue, // numeric order of the previous arc, or null
       promptText: promptText,
     });
     let tokenEst = await estimateTokens(prompt, { estimatedOutput: 500 });
@@ -587,8 +590,8 @@ export async function runArcAnalysisSequential(
         previousArcSummary,
         previousArcOrder: previousArcOrderValue,
         promptText: promptText,
-      });
-      tokenEst = await estimateTokens(prompt, { estimatedOutput: 500 });
+      });      
+    tokenEst = await estimateTokens(prompt, { estimatedOutput: 500 });
     }
     if (trimmed) {
       try {
@@ -625,6 +628,8 @@ export async function runArcAnalysisSequential(
       apiKey: conn.apiKey,
       extra,
     });
+    lastRawText = String(text ?? "");
+    lastRetryRawText = "";
 
     // Parse response
     let parsed;
@@ -642,6 +647,7 @@ export async function runArcAnalysisSequential(
         apiKey: conn.apiKey,
         extra,
       });
+      lastRetryRawText = String(retry?.text ?? "");
       try {
         parsed = parseArcJsonResponse(retry.text);
       } catch (e2) {
@@ -650,8 +656,8 @@ export async function runArcAnalysisSequential(
         );
         err.name = "ArcAIResponseError";
         err.code = "ARC_INVALID_JSON";
-        err.rawText = text;
-        err.retryRawText = retry?.text;
+        err.rawText = String(text ?? "");
+        err.retryRawText = String(retry?.text ?? "");
         err.prompt = prompt;
         err.repairPrompt = repairPrompt;
         throw err;
@@ -787,10 +793,32 @@ export async function runArcAnalysisSequential(
   }
 
   const leftovers = Array.from(remainingMap.values()).map((b) => b.id);
-  return { arcCandidates: acceptedArcs, leftovers };
+  return {
+    arcCandidates: acceptedArcs,
+    leftovers,
+    rawText: String(lastRawText ?? ""),
+    retryRawText: String(lastRetryRawText ?? ""),
+  };
 }
 
 function resolveConnection(profileOrConnection) {
+  // If no profile/connection provided, fall back to extension settings default profile.
+  // (Arc analysis is typically invoked without an explicit profile from the UI flow.)
+  if (!profileOrConnection) {
+    try {
+      const settings = extension_settings?.STMemoryBooks;
+      const profiles = settings?.profiles;
+      if (Array.isArray(profiles) && profiles.length > 0) {
+        const rawIndex = settings?.defaultProfile;
+        const idx =
+          Number.isInteger(rawIndex) && rawIndex >= 0 && rawIndex < profiles.length
+            ? rawIndex
+            : 0;
+        profileOrConnection = profiles[idx] || null;
+      }
+    } catch {}
+  }
+
   // If a direct connection-like object provided
   if (
     profileOrConnection &&
@@ -806,15 +834,22 @@ function resolveConnection(profileOrConnection) {
   ) {
     const c =
       profileOrConnection.effectiveConnection || profileOrConnection.connection;
+    const apiIsCurrentST = String(c?.api || "").toLowerCase() === "current_st";
+    const apiInfo = apiIsCurrentST ? getCurrentApiInfo() : null;
+    const ui = apiIsCurrentST ? getUIModelSettings() : null;
     return {
       api: normalizeCompletionSource(
-        c.api || getCurrentApiInfo().completionSource || "openai",
+        apiIsCurrentST
+          ? apiInfo?.completionSource || "openai"
+          : c.api || getCurrentApiInfo().completionSource || "openai",
       ),
-      model: c.model || getUIModelSettings().model || "",
+      model: apiIsCurrentST ? ui?.model || "" : c.model || getUIModelSettings().model || "",
       temperature:
-        typeof c.temperature === "number"
-          ? c.temperature
-          : getUIModelSettings().temperature ?? 0.2,
+        apiIsCurrentST
+          ? (ui?.temperature ?? 0.2)
+          : typeof c.temperature === "number"
+            ? c.temperature
+            : getUIModelSettings().temperature ?? 0.2,
       endpoint: c.endpoint,
       apiKey: c.apiKey,
     };

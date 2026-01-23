@@ -1,2 +1,4 @@
 scripts/
-onboarding/
+node_modules/
+.coderabbit.yaml
+*.build.*.map

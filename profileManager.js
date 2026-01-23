@@ -12,6 +12,7 @@ import * as SummaryPromptManager from './summaryPromptManager.js';
 import { t as __st_t_tag, translate } from '../../../i18n.js';
 
 const MODULE_NAME = 'STMemoryBooks-ProfileManager';
+const BUILTIN_CURRENT_ST_NAME = 'Current SillyTavern Settings';
 
 /**
  * Profile edit template
@@ -21,7 +22,7 @@ const profileEditTemplate = Handlebars.compile(`
     <div class="world_entry_form_control marginTop5">
         <label for="stmb-profile-name">
             <h4 data-i18n="STMemoryBooks_ProfileName">Profile Name:</h4>
-            <input type="text" id="stmb-profile-name" value="{{name}}" class="text_pole" data-i18n="[placeholder]STMemoryBooks_ProfileNamePlaceholder" placeholder="Profile name">
+            <input type="text" id="stmb-profile-name" value="{{name}}" class="text_pole" data-i18n="[placeholder]STMemoryBooks_ProfileNamePlaceholder" placeholder="Profile name" {{#if isNameLocked}}disabled title="Name locked for this profile"{{/if}}>
         </label>
     </div>
 
@@ -37,33 +38,37 @@ const profileEditTemplate = Handlebars.compile(`
             <select id="stmb-profile-api" class="text_pole" {{#if isProviderLocked}}disabled title="Provider locked for this profile"{{/if}}>
                 <option value="current_st" {{#if (eq connection.api "current_st")}}selected{{/if}} data-i18n="STMemoryBooks_CurrentSTSettings">Current SillyTavern Settings</option>
 
-                <option value="openai" {{#if (eq connection.api "openai")}}selected{{/if}}>OpenAI</option>
-                <option value="claude" {{#if (eq connection.api "claude")}}selected{{/if}}>Claude</option>
-                <option value="openrouter" {{#if (eq connection.api "openrouter")}}selected{{/if}}>OpenRouter</option>
                 <option value="ai21" {{#if (eq connection.api "ai21")}}selected{{/if}}>AI21</option>
-                <option value="makersuite" {{#if (eq connection.api "makersuite")}}selected{{/if}}>Google AI Studio</option>
-                <option value="vertexai" {{#if (eq connection.api "vertexai")}}selected{{/if}}>Vertex AI</option>
-                <option value="mistralai" {{#if (eq connection.api "mistralai")}}selected{{/if}}>MistralAI</option>
-                <option value="custom" {{#if (eq connection.api "custom")}}selected{{/if}} data-i18n="STMemoryBooks_CustomAPI">Custom API</option>
-                <option value="cohere" {{#if (eq connection.api "cohere")}}selected{{/if}}>Cohere</option>
-                <option value="perplexity" {{#if (eq connection.api "perplexity")}}selected{{/if}}>Perplexity</option>
-                <option value="groq" {{#if (eq connection.api "groq")}}selected{{/if}}>Groq</option>
-                <option value="electronhub" {{#if (eq connection.api "electronhub")}}selected{{/if}}>Electron Hub</option>
-                <option value="nanogpt" {{#if (eq connection.api "nanogpt")}}selected{{/if}}>NanoGPT</option>
-                <option value="deepseek" {{#if (eq connection.api "deepseek")}}selected{{/if}}>DeepSeek</option>
                 <option value="aimlapi" {{#if (eq connection.api "aimlapi")}}selected{{/if}}>AI/ML API</option>
-                <option value="xai" {{#if (eq connection.api "xai")}}selected{{/if}}>xAI</option>
-                <option value="pollinations" {{#if (eq connection.api "pollinations")}}selected{{/if}}>Pollinations</option>
-                <option value="moonshot" {{#if (eq connection.api "moonshot")}}selected{{/if}}>Moonshot</option>
-                <option value="fireworks" {{#if (eq connection.api "fireworks")}}selected{{/if}}>Fireworks</option>
-                <option value="cometapi" {{#if (eq connection.api "cometapi")}}selected{{/if}}>Comet API</option>
+                <option value="claude" {{#if (eq connection.api "claude")}}selected{{/if}}>Anthropic/Claude</option>
                 <option value="azure_openai" {{#if (eq connection.api "azure_openai")}}selected{{/if}}>Azure OpenAI</option>
-                <option value="zai" {{#if (eq connection.api "zai")}}selected{{/if}}>Z.AI</option>
+                <option value="cohere" {{#if (eq connection.api "cohere")}}selected{{/if}}>Cohere</option>
+                <option value="cometapi" {{#if (eq connection.api "cometapi")}}selected{{/if}}>Comet API</option>
+                <option value="deepseek" {{#if (eq connection.api "deepseek")}}selected{{/if}}>DeepSeek</option>
+                <option value="electronhub" {{#if (eq connection.api "electronhub")}}selected{{/if}}>Electron Hub</option>
+                <option value="fireworks" {{#if (eq connection.api "fireworks")}}selected{{/if}}>Fireworks</option>
+                <option value="makersuite" {{#if (eq connection.api "makersuite")}}selected{{/if}}>Google AI Studio</option>
+                <option value="groq" {{#if (eq connection.api "groq")}}selected{{/if}}>Groq</option>
+                <option value="mistralai" {{#if (eq connection.api "mistralai")}}selected{{/if}}>MistralAI</option>
+                <option value="moonshot" {{#if (eq connection.api "moonshot")}}selected{{/if}}>Moonshot</option>
+                <option value="nanogpt" {{#if (eq connection.api "nanogpt")}}selected{{/if}}>NanoGPT</option>
+                <option value="openai" {{#if (eq connection.api "openai")}}selected{{/if}}>OpenAI</option>
+                <option value="openrouter" {{#if (eq connection.api "openrouter")}}selected{{/if}}>OpenRouter</option>
+                <option value="perplexity" {{#if (eq connection.api "perplexity")}}selected{{/if}}>Perplexity</option>
+                <option value="pollinations" {{#if (eq connection.api "pollinations")}}selected{{/if}}>Pollinations</option>
                 <option value="siliconflow" {{#if (eq connection.api "siliconflow")}}selected{{/if}}>SiliconFlow</option>
+                <option value="vertexai" {{#if (eq connection.api "vertexai")}}selected{{/if}}>Vertex AI</option>
+                <option value="xai" {{#if (eq connection.api "xai")}}selected{{/if}}>xAI</option>
+                <option value="zai" {{#if (eq connection.api "zai")}}selected{{/if}}>Z.AI</option>
 
-                <option value="full-manual" {{#if (eq connection.api "full-manual")}}selected{{/if}} title="⚠️ EXCEPTIONAL setup - This should ONLY be used when you need a separate API connection to a different endpoint. Most users should NOT need this option." data-i18n="STMemoryBooks_FullManualConfig">Full Manual Configuration</option>
+                <option value="custom" {{#if (eq connection.api "custom")}}selected{{/if}} data-i18n="STMemoryBooks_CustomAPI">Custom OpenAI-Compatible API</option>
+                <option value="full-manual" {{#if (eq connection.api "full-manual")}}selected{{/if}}>Full Manual Configuration</option>
             </select>
         </label>
+
+        <div class="info-block hint marginBot10">
+            <small data-i18n="STMemoryBooks_APIProfileConfigHint">💡 Profile Setup Hint: STMB automatically reads API info and keys from your ST config. First, configure and test your connection in ST using Test Message. Then select it from the dropdown above to use those settings for memory generation. Only use Full Manual Configuration if you need two different Custom OpenAI-Compatible setups; otherwise, just create two connection profiles in ST—one for roleplay and one for Memory Books.</small>
+        </div>
 
         <label for="stmb-profile-model">
             <h4 data-i18n="STMemoryBooks_Model">Model:</h4>
@@ -85,6 +90,10 @@ const profileEditTemplate = Handlebars.compile(`
                 <h4 data-i18n="STMemoryBooks_APIKey">API Key:</h4>
                 <input type="password" id="stmb-profile-apikey" value="{{connection.apiKey}}" class="text_pole" data-i18n="[placeholder]STMemoryBooks_APIKeyPlaceholder" placeholder="Enter your API key">
             </label>
+
+            <div class="info-block hint warning marginBot10" data-i18n="STMemoryBooks_FullManualConfig">
+                ⚠️ EXCEPTIONAL setup - Full Manual Configuration should ONLY be used when you need a separate API connection to a different endpoint. Most users should NOT need this option.
+            </div>
         </div>
     </div>
 
@@ -213,15 +222,19 @@ export async function editProfile(settings, profileIndex, refreshCallback) {
         const connection = profile.connection || { temperature: 0.7 };
         const profileTitleFormat = profile.titleFormat || settings.titleFormat || '[000] - {{title}}';
         const allTitleFormats = getDefaultTitleFormats();
+        const isBuiltinCurrentST = !!profile.isBuiltinCurrentST;
         const templateData = {
-            name: profile.name,
+            name: isBuiltinCurrentST
+                ? translate(BUILTIN_CURRENT_ST_NAME, 'STMemoryBooks_Profile_CurrentST')
+                : profile.name,
             connection: connection,
             api: 'openai',
             prompt: profile.prompt || '',
             preset: profile.preset || '',
             currentApi: apiInfo.api || 'Unknown',
             presetOptions: presetOptions,
-            isProviderLocked: profile.name === 'Current SillyTavern Settings',
+            isNameLocked: isBuiltinCurrentST,
+            isProviderLocked: isBuiltinCurrentST,
             // Pass title format data to the template
             titleFormat: profileTitleFormat,
             titleFormats: allTitleFormats.map(format => ({
@@ -255,6 +268,14 @@ export async function editProfile(settings, profileIndex, refreshCallback) {
 
         if (result === POPUP_RESULT.AFFIRMATIVE) {
             const updatedProfile = buildProfileFromForm(popupInstance.dlg, profile.name);
+
+            // Enforce builtin profile invariants even if UI is bypassed.
+            if (profile?.isBuiltinCurrentST) {
+                updatedProfile.isBuiltinCurrentST = true;
+                updatedProfile.name = BUILTIN_CURRENT_ST_NAME;
+                updatedProfile.connection = updatedProfile.connection || {};
+                updatedProfile.connection.api = 'current_st';
+            }
 
             if (!validateProfile(updatedProfile)) {
                 toastr.error(translate('Invalid profile data', 'STMemoryBooks_InvalidProfileData'), 'STMemoryBooks');
@@ -303,7 +324,8 @@ export async function newProfile(settings, refreshCallback) {
             preset: '',
             currentApi: apiInfo.api || 'Unknown',
             presetOptions: presetOptions,
-            isProviderLocked: defaultName === 'Current SillyTavern Settings',
+            isNameLocked: false,
+            isProviderLocked: false,
             // Pass title format data to the template
             titleFormat: currentTitleFormat,
             titleFormats: allTitleFormats.map(format => ({
@@ -373,7 +395,7 @@ export async function deleteProfile(settings, profileIndex, refreshCallback) {
     const profile = settings.profiles[profileIndex];
 
     // Prevent deletion of the required default profile
-    if (profile?.name === 'Current SillyTavern Settings') {
+    if (profile?.isBuiltinCurrentST) {
         toastr.error(translate('Cannot delete the "Current SillyTavern Settings" profile - it is required for the extension to work', 'STMemoryBooks_CannotDeleteDefaultProfile'), 'STMemoryBooks');
         return;
     }
@@ -807,9 +829,10 @@ export function validateAndFixProfiles(settings) {
     if (settings.profiles.length === 0) {
         // Create default profile using provider-based "Current SillyTavern Settings"
         const dynamicProfile = createProfileObject({
-            name: 'Current SillyTavern Settings',
+            name: BUILTIN_CURRENT_ST_NAME,
             api: 'current_st',
-            preset: 'summary'
+            preset: 'summary',
+            isBuiltinCurrentST: true,
         });
 
         settings.profiles.push(dynamicProfile);
@@ -821,11 +844,61 @@ export function validateAndFixProfiles(settings) {
         if (p && p.useDynamicSTSettings) {
             p.connection = p.connection || {};
             p.connection.api = 'current_st';
+            p.isBuiltinCurrentST = true;
             delete p.useDynamicSTSettings;
             fixes.push(`Migrated legacy dynamic profile "${p.name}" to provider-based current_st`);
         }
         return p;
     });
+
+    // Ensure exactly one builtin "Current SillyTavern Settings" profile exists.
+    try {
+        const builtinIndices = [];
+        for (let i = 0; i < settings.profiles.length; i++) {
+            if (settings.profiles[i]?.isBuiltinCurrentST) builtinIndices.push(i);
+        }
+
+        if (builtinIndices.length === 0) {
+            // Prefer the legacy default (name + provider) if it exists, otherwise pick a reasonable current_st candidate.
+            let candidateIndex = settings.profiles.findIndex(
+                (p) => p?.connection?.api === 'current_st' && p?.name === BUILTIN_CURRENT_ST_NAME,
+            );
+            if (candidateIndex < 0) {
+                candidateIndex = settings.profiles.findIndex(
+                    (p) => p?.connection?.api === 'current_st' && (p?.preset === 'summary'),
+                );
+            }
+            if (candidateIndex < 0) {
+                candidateIndex = settings.profiles.findIndex((p) => p?.connection?.api === 'current_st');
+            }
+
+            if (candidateIndex >= 0) {
+                settings.profiles[candidateIndex].isBuiltinCurrentST = true;
+                fixes.push(`Marked existing profile "${settings.profiles[candidateIndex].name}" as builtin Current ST profile`);
+            } else {
+                // No current_st profiles exist; add the required builtin profile.
+                const dynamicProfile = createProfileObject({
+                    name: BUILTIN_CURRENT_ST_NAME,
+                    api: 'current_st',
+                    preset: 'summary',
+                    isBuiltinCurrentST: true,
+                });
+                settings.profiles.unshift(dynamicProfile);
+                if (typeof settings.defaultProfile === 'number') {
+                    settings.defaultProfile += 1;
+                }
+                fixes.push('Added missing builtin Current ST profile.');
+            }
+        } else if (builtinIndices.length > 1) {
+            // Keep the first builtin profile and clear the rest to avoid locking multiple profiles.
+            for (let j = 1; j < builtinIndices.length; j++) {
+                delete settings.profiles[builtinIndices[j]].isBuiltinCurrentST;
+            }
+            fixes.push('Fixed multiple builtin Current ST profiles (kept first, cleared others).');
+        }
+    } catch (e) {
+        console.warn(`${MODULE_NAME}: Failed to enforce builtin Current ST profile invariants`, e);
+    }
 
     settings.profiles.forEach((profile, index) => {
         if (!validateProfile(profile)) {
@@ -838,6 +911,13 @@ export function validateAndFixProfiles(settings) {
                 profile.connection = {};
                 fixes.push(`Fixed missing connection for profile ${index}`);
             }
+        }
+
+        // Enforce builtin profile invariants.
+        if (profile?.isBuiltinCurrentST) {
+            profile.name = BUILTIN_CURRENT_ST_NAME;
+            profile.connection = profile.connection || {};
+            profile.connection.api = 'current_st';
         }
 
         // For each profile, we check if the new settings exist. If not, we add the defaults.

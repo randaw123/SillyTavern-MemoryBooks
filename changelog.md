@@ -2,6 +2,32 @@
 
 **← [Back to README](readme.md)**
 
+## v4.16.7 (January 18, 2026)
+- Fixed arc analysis profile information not being fetched from STMB settings.
+
+## v4.16.6 (January 16, 2026)
+- Fixed `max_tokens` not passing to Anthropic during sideprompts.
+
+## v4.16.5 (January 13, 2026)
+- **Tweaks:** 
+  - Correct alignment for arc memory hide-originals checkbox.
+  - Rearrange connection profile settings dropdown.
+  - Make Full Manual settings warning more prominent.
+
+## v4.16.4 (January 13, 2026)
+- Fixed "Current SillyTavern Settings" profile naming bug.
+
+## v4.16.3 (January 13, 2026)
+- FINALLY fixed /unhide not working (always check the sequence of events, Aiko...)
+
+## v4.16.2 (January 12, 2026)
+- Fix arc undefined URL in Full Manual configuration
+
+## v4.16.1 (January 11, 2026)
+- Fix warning message for arc built in recreation
+- fix template name recreate
+- Force raw response presentation after arc analysis
+
 ## v4.16.0 (January 10, 2026)
 - **Enhancements**: 
   - Add raw JSON response viewer so bad JSON can be corrected manually.
