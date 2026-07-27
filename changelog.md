@@ -1,6 +1,230 @@
+<!--
+Copyright (C) 2024–2026 Aiko Hanasaki
+SPDX-License-Identifier: AGPL-3.0-only
+-->
+
 # 📕 Memory Books - Version History
 
 **← [Back to README](readme.md)**
+
+## v8.3.0 (July 25, 2026)
+- Enhancement: Added ability to regenerate memories with one click.
+- Tweak: Update arc keywords.
+
+## v8.2.3 (July 24, 2026)
+- Bugfix: Fix STLO detection.
+- Bugfix: Expose GC checkbox.
+- Various small tweak bugfixes.
+
+## v8.2.2 (July 16, 2026)
+- Bugfix: Fix STLO metadata writes.
+
+## v8.2.1 (July 15, 2026)
+- Bugfix: Fix re-setting scene markers after message deletion.
+
+## v8.2.0 (July 14, 2026)
+- Enhancement: Now you can set default Side Prompt sets for groups and solo chats in Memory Books > General Settings. 
+- Bugfix: Side prompts outside of the set should NOT trigger when the set is selected. This includes interval side prompts. 
+
+## v8.1.0 (July 12, 2026)
+- Enhancement: Added `{{memtier0}}` (Memory), `{{memtier1}}` (Arc), `{{memtier2}}` (Chapter), `{{memtier3}}` (Book), `{{memtier4}}` (Legend), `{{memtier5}}` (Series), `{{memtier6}}` (Epic), `{{memclips}}` (Clips), `{{memside}}` (Side Prompts) macros that will return the number of entries in the current chat-bound lorebook. 
+
+## v8.0.0 (July 8, 2026)
+- MAJOR NEW FEATURE: Multi-character memories in group chats.
+- Bugfix: useChatCompletionService now reads streaming value from oai_settings.stream_openai.
+- Tweak: Refactored settings layouts.
+
+## v7.2.1 (June 27, 2026)
+- Fixed STMB demanding 0 memories in catchup.
+
+## v7.2.0 (June 18, 2026)
+- Added Memory Books boundary and chat jump button.
+
+## v7.1.0 (June 14, 2026)
+- Added side prompt additional context selection. 
+
+## v7.0.1 (June 14, 2026)
+- Added Topical Clip memory selection.
+- Fixed selection appearance.
+
+## v7.0.0 (June 13, 2026)
+- BREAKING/MIGRATION: Additional Context has moved from profiles to reusable Context Settings with per-chat selection. Existing profile Additional Context is migrated automatically.
+
+## v6.12.0 (June 10, 2026)
+- NEW FEATURE: Additional Context allows you to add context to memories. You must create a profile (you cannot add them to "Current SillyTavern Settings".)
+
+## v6.11.2 (June 8, 2026)
+- Tweak: Compaction layout tweaks.
+
+## v6.11.1 (June 6, 2026)
+- Tweak: Add Chat Top Bar install info.
+
+## v6.11.0 (June 2, 2026)
+- Enhancement: Optional per-profile SillyTavern ChatCompletionService routing.
+- Tweak: Fix profile save normalization.
+
+## v6.10.2 (May 31, 2026)
+- Enhancement/Bugfix: SSE streaming format support (AT LAST).
+
+## v6.10.1 (May 29, 2026)
+- Bugfix: Consolidation manual lorebook fix.
+
+## v6.10.0 (May 29, 2026)
+- NEW FEATURE: Topical Clip extracts and creates topical entries from existing STMB memories/Clips.
+- Tweak: json_schema request toggle per profile.
+- Bugfix: auto-prompting with job queue.
+
+## v6.9.3 (May 27, 2026)
+- Bugfix: Memory title formats now consistently use selected profile setting.
+- Tweak: Add Chutes provider.
+- Bugfix: Reverse proxy checkbox added.
+
+## v6.9.2 (May 25, 2026)
+- Enhancement: Google Vertex added (thank you @TwinkleStar1029 on Github!).
+
+## v6.9.1 (May 24, 2026)
+- Bugfix: Group chat processing fixed.
+
+## v6.9.0 (May 20, 2026)
+- Enhancement: Added consolidation previews. 
+- Bugfix: Sideprompt batch processing fixed.
+
+## v6.8.1 (May 18, 2026)
+- Tweak: Added back button. :D 
+- Tweak: Added default consolidation prompt selector.
+- Bugfix: Sideprompt batching with job queue.
+- Bugfix: Autohide with job queue.
+
+## v6.8.0 (May 17, 2026)
+- NEW FEATURE: Job Queue allows for better control and visibility into what is currently processing. This feature requires the extension Chat Top Bar (Extension-TopInfoBar) to work. STMB will continue to function without it, but I recommend that you install it (it's an amazing extension).
+
+## v6.7.0 (May 17, 2026)
+- Enhancement: Reverse proxy support now added (thank you @siberys (Discord) for the explanation on how reverse proxies should work in STMB 💖) Please note that this works the same way as ST's current reverse proxying works--I cannot diagnose your proxies unless you give me proxy information (please don't). 
+
+## v6.6.2 (May 15, 2026)
+- Tweak: Switched "summarize" to "process".
+
+## v6.6.1 (May 6, 2026)
+- Bugfix: Flex row on buttons.
+- Tweak: Z.ai now picks up choice of endpoint from ST base.
+
+## v6.6.0 (May 5, 2026)
+**New Feature: Clip to Memory Book**
+You can now highlight chat text and use the floating scissors button to save it as a bullet in a Memory Book entry marked with `[STMB Clip]`. Clip entries can be created, renamed, keyword-triggered or always active, and reviewed/compacted when they get long.
+
+**New Feature: Compaction**
+Clip entries and Side Prompt entries can grow over time. Compaction sends the selected entry to the AI with instructions to make it more token-efficient while preserving as much useful information as possible.
+
+## v6.5.0 (May 2, 2026)
+- Add side prompt sets. 
+- Add specific side prompt documentation.
+
+## v6.4.0 (May 1, 2026)
+- Add per-side prompt lorebook overrides.
+- Add `/stmb-catchup interval=x start=y end=y` for converting existing long chats into STMB memories in interval-sized chunks.
+
+## v6.3.5 (April 22, 2026)
+- Updated WI saving to match 1.17.0 defaults.
+- Updated group chat metadata wording to match SillyTavern's current chat-file metadata format.
+
+## v6.3.4 (April 17, 2026)
+- Bugfix: Max tokens ignored 0. Now fixed.
+
+## v6.3.3 (April 8, 2026)
+- Bugfix: Sideprompt interval runs now use message range correctly.
+
+## v6.3.2 (April 6, 2026)
+- Bugfix: Custom title formats save properly on edit.
+
+## v6.3.1 (March 31, 2026)
+- `/sideprompt` autocomplete now only suggests side prompts with manual run enabled.
+- Bugfix: sideprompt manual enable setting bug fixed
+- Bugfix: sideprompt regex path fixed
+
+## v6.3.0 (March 29, 2026)
+- Consolidated summaries can now save their own lorebook entry settings, including insertion and recursion controls, with dedicated localization keys.
+
+## v6.2.1 (March 27, 2026)
+- Changed wording in prompts from "vectorized database" to "keyworded database".
+
+## v6.2.1 (March 27, 2026)
+- if the chat-bound or manual lorebook was deleted or unbound and you try to make memories, STMB will prompt you for a lorebook instead of just erroring.
+
+## v6.1.1 (March 25, 2026)
+- Bugfix: fixed sideprompt interval run save path.
+
+## v6.1.0 (March 23, 2026)
+- Improve auto-consolidation settings with multi-select target tiers.
+- Reorganized main settings popup for readability.
+- Update README, User Guide, and localized README copies to reflect the current consolidation, regex, and settings behavior.
+
+## v6.0.0 (March 23, 2026)
+- **Breaking Change:** Arc consolidation has been refactored into a summary-tier system.
+- `Consolidate Memories into Arcs` is now `Consolidate Memories`, with tiered generation for Arc, Chapter, Book, Legend, Series, and Epic.
+- Legacy arc metadata will be migrated to the new summary schema on first use per lorebook.
+- Arc analysis prompts and locale strings were updated for the new summary-tier flow.
+- Added an optional auto-consolidation readiness prompt that can open the consolidation popup when any selected tier reaches its minimum source count.
+
+## v5.2.2 (March 22, 2026)
+- Fix lorebookconverter.html to read conversion titles better.
+- Fix side prompts to throw error on blank response instead of overwriting with a blank entry.
+- Fix side prompts to use `/unhide` command as well so they can be run on hidden ranges.
+- Fix manual side prompts to re-hide messages that were originally hidden after a temporary `/unhide`.
+
+## v5.2.1 (March 20, 2026)
+- Reorganized main settings popup for clarity.
+- Added some tooltips for clarity.
+- Made Max Tokens default to 4000 unless other values are entered. 
+
+## v5.2.0 (March 20, 2026)
+- Add keyword field for side prompts.
+
+## v5.1.0 (March 20, 2026)
+- Improve save behavior on settings popup.
+- Add title override for side prompts.
+
+## v5.0.0 (March 19, 2026)
+- **Breaking Change:** `/sideprompt` now requires a quoted side prompt name and uses the new syntax `/sideprompt "Name" {{macro}}="value" [X-Y]`.
+- **New:** Side prompts now expand standard SillyTavern macros in both the main prompt and response format.
+- **New:** Custom non-standard `{{macro}}` placeholders are now recognized as required runtime macros for manual `/sideprompt` runs.
+- **Improved:** `/sideprompt` autocomplete now suggests required runtime macros after a side prompt is selected.
+- **Validation:** Side prompts containing custom runtime macros are now manual-run-only and cannot be configured with automatic interval or after-memory triggers.
+- **UX:** Saving a side prompt with invalid automatic triggers now shows a sticky warning toast listing all exact custom macros that require manual invocation.
+
+## v4.18.5 (March 13, 2026)
+- change "delay until recursion" to default to "false".
+
+## v4.18.4 (March 13, 2026)
+- fix side prompts treating regeneration as cancel.
+
+## v4.18.3 (March 10, 2026)
+Enhancements:
+- Add `/stmb-stop` to stop all STMB generations (includes side prompts in flight)
+- Add "ignore budget" checkbox to side prompt entry settings
+
+Bugfix: #{{value}} in `/stmb-set-highest` toast fixed.
+
+Tweaks: 
+- Consolidated translation helper functions.
+- Made checkboxes aligned in side prompt popup.
+
+## v4.18.2 (February 23, 2026)
+- change minimum memories per arc default to 10
+- change "disable arced memories" to default to "true" (can still uncheck)
+- change maximum arc token budget available to 150000 (defaults did not change)
+- change maximum memories per pass to 100 (defaults did not change)
+
+## v4.18.1 (February 15, 2026)
+- add max_tokens exception for Claude Opus 4.6
+- fix /creatememory not doing /unhide correctly
+
+## v4.18.0 (January 29, 2026)
+- Add max tokens to main settings popup, serving as an override for chat completion tokens.
+- Add order settings to arcs.
+
+## v4.17.0 (January 27, 2026)
+- Add ability to manually set highest processed message for chats with `/stmb-set-highest x`.
+- Add reverse sort for Outlets.
 
 ## v4.16.7 (January 18, 2026)
 - Fixed arc analysis profile information not being fetched from STMB settings.
@@ -497,7 +721,7 @@
   - Per-profile API, model, temperature, prompt/preset settings
   - Profile-specific title formats and lorebook settings
 - **Enhanced DOM Handling:** Fixed various DOM-related issues for group chats
-- **Metadata Improvements:** Better handling of chat and group metadata
+- **Metadata Improvements:** Better handling of chat metadata for single and group chats
 
 ## v3.2.x Series (2025)
 - **Title Formatting System:** Comprehensive title customization
@@ -510,7 +734,7 @@
 ## v3.1.x Series (2025)
 - **Group Chat Support:** Full implementation of group chat functionality
   - Scene markers, memory creation, and lorebook integration for groups
-  - Group metadata storage and management
+  - Chat metadata storage and management for group chats
   - Specialized group chat DOM handling
 - **Scene Memory Command:** Added `/scenememory x-y` command for creating memories from specific message ranges
 - **Token Estimation:** Enhanced token counting for better memory size management

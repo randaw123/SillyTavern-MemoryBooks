@@ -1,3 +1,6 @@
+// Copyright (C) 2024–2026 Aiko Hanasaki
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /**
  * Constants for STMemoryBooks extension
  */
@@ -31,11 +34,15 @@ export const UI_SETTINGS = {
     CHAT_OBSERVER_DEBOUNCE_MS: 50,
 };
 
+export const MEMORY_TIER_CACHE_REFRESH_EVENT = 'stmb_memory_tier_cache_refresh';
+export const CONSOLIDATION_REGENERATION_PRESET_KEY = 'arc_regenerate';
+
 // File names
 export const FILE_NAMES = {
     PROMPTS_FILE: 'stmb-summary-prompts.json',
     SIDE_PROMPTS_FILE: 'stmb-side-prompts.json',
     ARC_PROMPTS_FILE: 'stmb-arc-prompts.json',
+    CONTEXT_SETTINGS_FILE: 'stmb-context-settings.json',
 };
 
 // Schema version
@@ -46,6 +53,8 @@ export const SCHEMA = {
 // Display name localization defaults and i18n keys for built-in presets
 export const DISPLAY_NAME_DEFAULTS = {
     summary: 'Summary - Detailed beat-by-beat summaries in narrative prose',
+    group: 'Group - Shared group memory with clear attribution',
+    char: 'Character - Targeted character memory',
     summarize: 'Summarize - Bullet-point format',
     synopsis: 'Synopsis - Long and comprehensive (beats, interactions, details) with headings',
     sumup: 'Sum Up - Concise story beats in narrative prose',
@@ -57,6 +66,8 @@ export const DISPLAY_NAME_DEFAULTS = {
 
 export const DISPLAY_NAME_I18N_KEYS = {
     summary: 'STMemoryBooks_DisplayName_summary',
+    group: 'STMemoryBooks_DisplayName_group',
+    char: 'STMemoryBooks_DisplayName_char',
     summarize: 'STMemoryBooks_DisplayName_summarize',
     synopsis: 'STMemoryBooks_DisplayName_synopsis',
     sumup: 'STMemoryBooks_DisplayName_sumup',

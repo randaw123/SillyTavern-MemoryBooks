@@ -1,12 +1,18 @@
+// Copyright (C) 2024–2026 Aiko Hanasaki
+// SPDX-License-Identifier: AGPL-3.0-only
+
 import { extension_settings } from '../../../extensions.js';
 import { chat, chat_metadata } from '../../../../script.js';
-import { METADATA_KEY, world_names } from '../../../world-info.js';
+import { METADATA_KEY } from '../../../world-info.js';
 import { getSceneMarkers, saveMetadataForCurrentContext, clearScene } from './sceneManager.js';
-import { getCurrentMemoryBooksContext, showLorebookSelectionPopup, clampInt } from './utils.js';
-import { autoCreateLorebook } from './autocreate.js';
+import { showLorebookSelectionPopup, clampInt } from './utils.js';
 import { Popup, POPUP_TYPE, POPUP_RESULT } from '../../../popup.js';
 import { isMemoryProcessing } from './index.js';
 import { translate } from '../../../i18n.js';
+import { validateLorebookRequirement } from './lorebookValidation.js';
+
+let autoSummarySkippedForProcessing = false;
+let autoSummarySkippedMarkersRef = null;
 
 /**
  * i18n helper: translate with Mustache-style {{var}} interpolation
@@ -26,30 +32,13 @@ function i18n(key, fallback, params) {
  * Validates lorebook for auto-summary with user-friendly prompts
  */
 async function validateLorebookForAutoSummary() {
-    // First, try to get a lorebook without showing popups
     const settings = extension_settings.STMemoryBooks;
-    let lorebookName;
+    const manualMode = !!settings?.moduleSettings?.manualModeEnabled;
 
-    if (!settings.moduleSettings.manualModeEnabled) {
-        // Automatic mode - use chat-bound lorebook
-        lorebookName = chat_metadata?.[METADATA_KEY] || null;
-
-        // Check if auto-create is enabled and no lorebook exists
-        if (!lorebookName && settings?.moduleSettings?.autoCreateLorebook) {
-            // Auto-create lorebook using template
-            const template = settings.moduleSettings.lorebookNameTemplate || i18n('STMemoryBooks_LorebookNameTemplatePlaceholder', 'LTM - {{char}} - {{chat}}');
-            const result = await autoCreateLorebook(template, 'auto-summary');
-
-            if (result.success) {
-                lorebookName = result.name;
-            } else {
-                return { valid: false, error: result.error };
-            }
-        }
-    } else {
+    if (manualMode) {
         // Manual mode - check if a lorebook is already selected
         const stmbData = getSceneMarkers() || {};
-        lorebookName = stmbData.manualLorebook ?? null;
+        let lorebookName = stmbData.manualLorebook ?? null;
 
         // If no lorebook is selected, ask user what to do
         if (!lorebookName) {
@@ -101,24 +90,21 @@ async function validateLorebookForAutoSummary() {
                 return { valid: false, error: i18n('STMemoryBooks_Info_AutoSummaryPostponed', 'Auto-summary postponed for {{count}} messages.', { count: postponeMessages }) };
             }
         }
+
+        return await validateLorebookRequirement({
+            createContext: 'auto-summary',
+            manualMode: true,
+            lorebookName,
+            retryText: i18n('STMemoryBooks_AutoSummaryRetryAfterSelection', 'After selecting a lorebook, try again.'),
+        });
     }
 
-    // At this point we should have a lorebook name - validate it
-    if (!lorebookName) {
-        return { valid: false, error: i18n('STMemoryBooks_Error_NoLorebookForAutoSummary', 'No lorebook available for auto-summary.') };
-    }
-
-    if (!world_names || !world_names.includes(lorebookName)) {
-        return { valid: false, error: i18n('STMemoryBooks_Error_SelectedLorebookNotFound', 'Selected lorebook "{{name}}" not found.', { name: lorebookName }) };
-    }
-
-    try {
-        const { loadWorldInfo } = await import('../../../world-info.js');
-        const lorebookData = await loadWorldInfo(lorebookName);
-        return { valid: !!lorebookData, data: lorebookData, name: lorebookName };
-    } catch (error) {
-        return { valid: false, error: i18n('STMemoryBooks_Error_FailedToLoadSelectedLorebook', 'Failed to load the selected lorebook.') };
-    }
+    return await validateLorebookRequirement({
+        createContext: 'auto-summary',
+        manualMode: false,
+        lorebookName: chat_metadata?.[METADATA_KEY] || null,
+        retryText: i18n('STMemoryBooks_AutoSummaryRetryAfterSelection', 'After selecting a lorebook, try again.'),
+    });
 }
 
 /**
@@ -139,23 +125,27 @@ async function checkAutoSummaryTrigger() {
         const rawBuf = settings?.moduleSettings?.autoSummaryBuffer;
         const buffer = clampInt(parseInt(rawBuf) || 0, 0, 50);
         const requiredTotal = requiredInterval + buffer;
-        const highestProcessed = stmbData.highestMemoryProcessed ?? null;
+        const rawHighestProcessed = stmbData.highestMemoryProcessed;
+        const hasHighestProcessed =
+            typeof rawHighestProcessed === 'number' && Number.isFinite(rawHighestProcessed);
+        // Treat "no baseline" as -1 (none processed yet) so the next range starts at 0.
+        const highestProcessed = hasHighestProcessed ? rawHighestProcessed : -1;
 
         // Check if memory creation is in progress
         if (isMemoryProcessing()) {
+            autoSummarySkippedForProcessing = true;
+            autoSummarySkippedMarkersRef = stmbData;
             console.log(i18n('autosummary.log.skippedInProgress', 'STMemoryBooks: Auto-summary skipped - memory creation in progress'));
             return;
         }
 
         // Calculate messages since last memory
         let messagesSinceLastMemory;
-        if (highestProcessed === null) {
-            // No previous memories processed - count from beginning
-            messagesSinceLastMemory = currentMessageCount;
+        // Count messages since the last processed memory. With highestProcessed = -1, this becomes currentMessageCount.
+        messagesSinceLastMemory = currentLastMessage - highestProcessed;
+        if (!hasHighestProcessed) {
             console.log(i18n('autosummary.log.noPrevious', 'STMemoryBooks: No previous memories found - counting from start'));
         } else {
-            // Count messages since the last processed memory
-            messagesSinceLastMemory = currentLastMessage - highestProcessed;
             console.log(i18n('autosummary.log.sinceLast', 'STMemoryBooks: Messages since last memory ({{highestProcessed}}): {{count}}', { highestProcessed, count: messagesSinceLastMemory }));
         }
 
@@ -190,15 +180,9 @@ async function checkAutoSummaryTrigger() {
         let sceneStart, sceneEnd;
         const sceneEndCandidate = currentLastMessage - buffer;
         const safeEnd = Math.max(0, sceneEndCandidate);
-        if (highestProcessed === null) {
-            // First memory - include everything from start
-            sceneStart = 0;
-            sceneEnd = safeEnd;
-        } else {
-            // Start from the message after the last processed memory
-            sceneStart = highestProcessed + 1;
-            sceneEnd = safeEnd;
-        }
+        // Start from the message after the last processed memory (or 0 if none processed yet).
+        sceneStart = highestProcessed + 1;
+        sceneEnd = safeEnd;
         // Defensive: ensure valid range
         if (sceneStart > sceneEnd) {
             return;
@@ -220,22 +204,16 @@ async function checkAutoSummaryTrigger() {
 }
 
 /**
- * Handle auto-summary for single character chats on message received
+ * Handle auto-summary on message received
  * @returns {Promise<void>}
  */
 export async function handleAutoSummaryMessageReceived() {
     try {
-        const context = getCurrentMemoryBooksContext();
-
-        // Only check auto-summary for single character chats on MESSAGE_RECEIVED
-        // Group chats will be handled by GROUP_WRAPPER_FINISHED event
-        if (!context.isGroupChat && extension_settings.STMemoryBooks.moduleSettings.autoSummaryEnabled) {
+        if (extension_settings.STMemoryBooks?.moduleSettings?.autoSummaryEnabled) {
             const currentMessageCount = chat.length;
-            console.log(i18n('autosummary.log.messageReceivedSingle', 'STMemoryBooks: Message received (single chat) - auto-summary enabled, current count: {{count}}', { count: currentMessageCount }));
+            console.log(i18n('autosummary.log.messageReceivedSingle', 'STMemoryBooks: Message received - auto-summary enabled, current count: {{count}}', { count: currentMessageCount }));
 
             await checkAutoSummaryTrigger();
-        } else if (context.isGroupChat) {
-            console.log(i18n('autosummary.log.messageReceivedGroup', 'STMemoryBooks: Message received in group chat - deferring to GROUP_WRAPPER_FINISHED'));
         }
     } catch (error) {
         console.error(i18n('autosummary.log.messageHandlerError', 'STMemoryBooks: Error in auto-summary message received handler:'), error);
@@ -243,21 +221,25 @@ export async function handleAutoSummaryMessageReceived() {
 }
 
 /**
- * Handle auto-summary for group chats when all members have finished speaking
+ * Retry an auto-summary check that was skipped while memory/job processing was active.
  * @returns {Promise<void>}
  */
-export async function handleAutoSummaryGroupFinished() {
-    try {
-        if (extension_settings.STMemoryBooks.moduleSettings.autoSummaryEnabled) {
-            const currentMessageCount = chat.length;
-            console.log(i18n('autosummary.log.groupFinished', 'STMemoryBooks: Group conversation finished - auto-summary enabled, current count: {{count}}', { count: currentMessageCount }));
-
-            // Check auto-summary trigger after all group members have finished speaking
-            await checkAutoSummaryTrigger();
-        }
-    } catch (error) {
-        console.error(i18n('autosummary.log.groupHandlerError', 'STMemoryBooks: Error in auto-summary group finished handler:'), error);
+export async function retryAutoSummaryAfterJobIdle() {
+    if (!autoSummarySkippedForProcessing) {
+        return;
     }
+    if (isMemoryProcessing()) {
+        return;
+    }
+    if (autoSummarySkippedMarkersRef && autoSummarySkippedMarkersRef !== getSceneMarkers()) {
+        autoSummarySkippedForProcessing = false;
+        autoSummarySkippedMarkersRef = null;
+        return;
+    }
+
+    autoSummarySkippedForProcessing = false;
+    autoSummarySkippedMarkersRef = null;
+    await checkAutoSummaryTrigger();
 }
 
 /**

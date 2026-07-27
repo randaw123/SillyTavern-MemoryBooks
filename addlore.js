@@ -1,31 +1,26 @@
+// Copyright (C) 2024–2026 Aiko Hanasaki
+// SPDX-License-Identifier: AGPL-3.0-only
+
 import { getContext } from '../../../extensions.js';
 import {
     METADATA_KEY,
     loadWorldInfo,
     createWorldInfoEntry,
     saveWorldInfo,
-    reloadEditor
+    reloadEditor,
+    newWorldInfoEntryTemplate,
 } from '../../../world-info.js';
 import { extension_settings } from '../../../extensions.js';
 import { moment } from '../../../../lib.js';
 import { executeSlashCommands } from '../../../slash-commands.js';
 import { getSceneMarkers, saveMetadataForCurrentContext } from './sceneManager.js';
-import { translate } from '../../../i18n.js';
+import { i18n } from './i18nHelpers.js';
+import {
+    applyFixedSequenceNumber,
+    hasSequenceNumberPlaceholder,
+} from './memoryRegeneration.js';
 
 const MODULE_NAME = 'STMemoryBooks-AddLore';
-
-/**
- * Local i18n wrapper to maintain legacy i18n(key, fallback, params) calls.
- * Uses SillyTavern translate(fallback, key) and simple {{var}} interpolation.
- */
-function i18n(key, fallback, params) {
-    const localized = translate(fallback, key);
-    if (!params) return localized;
-    return localized.replace(/{{\s*(\w+)\s*}}/g, (m, p1) => {
-        const v = params[p1];
-        return v !== undefined && v !== null ? String(v) : '';
-    });
-}
 
 /**
  * Parse scene range from metadata string format "start-end"
@@ -94,6 +89,110 @@ function getAutoHideMode(moduleSettings = {}) {
     }
 }
 
+export function getAutoHideRanges(memoryResult, moduleSettings = {}) {
+    const autoHideMode = getAutoHideMode(moduleSettings);
+    if (autoHideMode === 'none') {
+        return {
+            mode: autoHideMode,
+            ranges: [],
+            invalidRange: false,
+            rawRange: memoryResult?.metadata?.sceneRange,
+        };
+    }
+
+    const sceneData = parseSceneRange(memoryResult?.metadata?.sceneRange);
+    if (!sceneData) {
+        return {
+            mode: autoHideMode,
+            ranges: [],
+            invalidRange: true,
+            rawRange: memoryResult?.metadata?.sceneRange,
+        };
+    }
+
+    const unhiddenCount = moduleSettings.unhiddenEntriesCount ?? 2;
+    const { start: sceneStart, end: sceneEnd } = sceneData;
+
+    if (autoHideMode === 'all') {
+        if (unhiddenCount === 0) {
+            return {
+                mode: autoHideMode,
+                ranges: [{
+                    start: 0,
+                    end: sceneEnd,
+                    contextKey: 'addlore.hideCommand.allComplete',
+                    contextFallback: 'all mode - complete',
+                }],
+                invalidRange: false,
+                rawRange: memoryResult?.metadata?.sceneRange,
+            };
+        }
+
+        const hideEndIndex = sceneEnd - unhiddenCount;
+        return {
+            mode: autoHideMode,
+            ranges: hideEndIndex >= 0
+                ? [{
+                    start: 0,
+                    end: hideEndIndex,
+                    contextKey: 'addlore.hideCommand.allPartial',
+                    contextFallback: 'all mode - partial',
+                }]
+                : [],
+            invalidRange: false,
+            rawRange: memoryResult?.metadata?.sceneRange,
+        };
+    }
+
+    if (autoHideMode === 'last') {
+        const sceneSize = sceneEnd - sceneStart + 1;
+        if (unhiddenCount >= sceneSize) {
+            return {
+                mode: autoHideMode,
+                ranges: [],
+                invalidRange: false,
+                rawRange: memoryResult?.metadata?.sceneRange,
+            };
+        }
+
+        if (unhiddenCount === 0) {
+            return {
+                mode: autoHideMode,
+                ranges: [{
+                    start: sceneStart,
+                    end: sceneEnd,
+                    contextKey: 'addlore.hideCommand.lastHideAll',
+                    contextFallback: 'last mode - hide all',
+                }],
+                invalidRange: false,
+                rawRange: memoryResult?.metadata?.sceneRange,
+            };
+        }
+
+        const hideEnd = sceneEnd - unhiddenCount;
+        return {
+            mode: autoHideMode,
+            ranges: hideEnd >= sceneStart
+                ? [{
+                    start: sceneStart,
+                    end: hideEnd,
+                    contextKey: 'addlore.hideCommand.lastPartial',
+                    contextFallback: 'last mode - partial',
+                }]
+                : [],
+            invalidRange: false,
+            rawRange: memoryResult?.metadata?.sceneRange,
+        };
+    }
+
+    return {
+        mode: autoHideMode,
+        ranges: [],
+        invalidRange: false,
+        rawRange: memoryResult?.metadata?.sceneRange,
+    };
+}
+
 // Default title formats that users can select from
 const DEFAULT_TITLE_FORMATS = [
     '[000] - {{title}} ({{profile}})', // i18n('addlore.titleFormats.0', '[000] - {{title}} ({{profile}})')
@@ -106,6 +205,277 @@ const DEFAULT_TITLE_FORMATS = [
     '[000] - {{title}} ({{scene}})', // i18n('addlore.titleFormats.7', '[000] - {{title}} ({{scene}})')
     '[000] - {{title}}' // i18n('addlore.titleFormats.8', '[000] - {{title}}')
 ];
+
+const VALID_LOREBOOK_POSITIONS = new Set([0, 1, 2, 3, 5, 6, 7]);
+
+export const DEFAULT_LOREBOOK_ENTRY_SETTINGS = Object.freeze({
+    constVectMode: 'link',
+    position: 0,
+    outletName: '',
+    orderMode: 'auto',
+    orderValue: 100,
+    reverseStart: 9999,
+    preventRecursion: false,
+    delayUntilRecursion: false,
+    ignoreBudget: false,
+});
+
+const CONTROLLED_WORLD_INFO_DEFAULT_FIELDS = [
+    'keysecondary',
+    'selective',
+    'selectiveLogic',
+    'addMemo',
+    'disable',
+    'ignoreBudget',
+    'excludeRecursion',
+    'matchPersonaDescription',
+    'matchCharacterDescription',
+    'matchCharacterPersonality',
+    'matchCharacterDepthPrompt',
+    'matchScenario',
+    'matchCreatorNotes',
+    'probability',
+    'useProbability',
+    'depth',
+    'group',
+    'groupOverride',
+    'groupWeight',
+    'scanDepth',
+    'caseSensitive',
+    'matchWholeWords',
+    'useGroupScoring',
+    'automationId',
+    'role',
+    'sticky',
+    'cooldown',
+    'delay',
+    'triggers',
+];
+
+const FALLBACK_WORLD_INFO_ENTRY_DEFAULTS = Object.freeze({
+    keysecondary: [],
+    selective: true,
+    selectiveLogic: 0,
+    addMemo: false,
+    disable: false,
+    ignoreBudget: false,
+    excludeRecursion: false,
+    matchPersonaDescription: false,
+    matchCharacterDescription: false,
+    matchCharacterPersonality: false,
+    matchCharacterDepthPrompt: false,
+    matchScenario: false,
+    matchCreatorNotes: false,
+    probability: 100,
+    useProbability: true,
+    depth: 4,
+    group: '',
+    groupOverride: false,
+    groupWeight: 100,
+    scanDepth: null,
+    caseSensitive: null,
+    matchWholeWords: null,
+    useGroupScoring: null,
+    automationId: '',
+    role: 0,
+    sticky: null,
+    cooldown: null,
+    delay: null,
+    triggers: [],
+});
+
+function clampLorebookOrderValue(value, fallback = 100) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) {
+        return fallback;
+    }
+    return Math.min(9999, Math.max(0, Math.trunc(num)));
+}
+
+function clampLorebookReverseStart(value, fallback = 9999) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) {
+        return fallback;
+    }
+    return Math.min(9999, Math.max(100, Math.trunc(num)));
+}
+
+function normalizeLorebookPosition(value, fallback = 0) {
+    const num = Number(value);
+    const pos = Number.isFinite(num) ? Math.trunc(num) : fallback;
+    return VALID_LOREBOOK_POSITIONS.has(pos) ? pos : fallback;
+}
+
+function normalizeDelayUntilRecursion(value, fallback = false) {
+    if (value === undefined) {
+        return fallback;
+    }
+
+    if (value === true || value === false) {
+        return value;
+    }
+
+    const num = Number(value);
+    if (Number.isFinite(num) && num > 0) {
+        return Math.trunc(num);
+    }
+
+    return false;
+}
+
+function cloneWorldInfoDefaultValue(value) {
+    if (Array.isArray(value)) {
+        return [...value];
+    }
+
+    if (value && typeof value === 'object') {
+        return { ...value };
+    }
+
+    return value;
+}
+
+function getWorldInfoDefaultValue(field) {
+    const template = newWorldInfoEntryTemplate || {};
+    const value = Object.hasOwn(template, field)
+        ? template[field]
+        : FALLBACK_WORLD_INFO_ENTRY_DEFAULTS[field];
+
+    return cloneWorldInfoDefaultValue(value);
+}
+
+function computeLorebookEntryOrder(lorebookSettings, orderNumber, options = {}) {
+    const ORDER_MIN = 0;
+    const ORDER_MAX = 9999;
+    const modeRaw = String(lorebookSettings?.orderMode || 'auto').toLowerCase();
+    const mode = modeRaw === 'manual' || modeRaw === 'reverse' ? modeRaw : 'auto';
+    const safeOrderNumber = Number.isFinite(Number(orderNumber))
+        ? Math.max(1, Math.trunc(Number(orderNumber)))
+        : 1;
+    const reverseStart = clampLorebookReverseStart(lorebookSettings?.reverseStart, 9999);
+
+    const rawOrder = mode === 'manual'
+        ? lorebookSettings?.orderValue
+        : mode === 'reverse'
+            ? reverseStart - (safeOrderNumber - 1)
+            : safeOrderNumber;
+
+    const rawOrderNum = Number(rawOrder);
+    const sourceLabel = mode === 'manual'
+        ? 'manual order value'
+        : mode === 'reverse'
+            ? `computed order (from ${options.orderNumberLabel || 'entry'} #${safeOrderNumber})`
+            : (options.orderNumberLabel || 'entry number');
+
+    let finalOrder = rawOrder;
+    if (!Number.isFinite(rawOrderNum)) {
+        finalOrder = mode === 'manual' ? 100 : safeOrderNumber;
+    } else if (rawOrderNum < ORDER_MIN || rawOrderNum > ORDER_MAX) {
+        const clampedNum = Math.min(ORDER_MAX, Math.max(ORDER_MIN, Math.trunc(rawOrderNum)));
+        finalOrder = clampedNum;
+
+        if (options.showOrderClampNotification && extension_settings.STMemoryBooks?.moduleSettings?.showNotifications !== false) {
+            toastr.info(
+                i18n(
+                    'addlore.toast.orderClamped',
+                    'Order range is limited to 0–9999. Current {{source}} is {{requested}}; clamped to {{clamped}}.',
+                    { source: sourceLabel, requested: rawOrderNum, clamped: clampedNum }
+                ),
+                i18n('addlore.toast.title', 'STMemoryBooks')
+            );
+        }
+    }
+
+    return Number.isFinite(Number(finalOrder))
+        ? Math.min(ORDER_MAX, Math.max(ORDER_MIN, Math.trunc(Number(finalOrder))))
+        : (mode === 'manual' ? 100 : safeOrderNumber);
+}
+
+export function normalizeLorebookEntrySettings(settings = {}, defaults = DEFAULT_LOREBOOK_ENTRY_SETTINGS) {
+    const base = {
+        ...DEFAULT_LOREBOOK_ENTRY_SETTINGS,
+        ...(defaults || {}),
+    };
+
+    const modeRaw = String(
+        settings?.constVectMode !== undefined ? settings.constVectMode : base.constVectMode,
+    ).toLowerCase();
+    const constVectMode =
+        modeRaw === 'blue' || modeRaw === 'green' || modeRaw === 'link'
+            ? modeRaw
+            : 'link';
+
+    const orderModeRaw = String(
+        settings?.orderMode !== undefined ? settings.orderMode : base.orderMode,
+    ).toLowerCase();
+    const orderMode =
+        orderModeRaw === 'manual' || orderModeRaw === 'reverse'
+            ? orderModeRaw
+            : 'auto';
+
+    const fallbackOrderValue = clampLorebookOrderValue(base.orderValue, 100);
+    const fallbackReverseStart = clampLorebookReverseStart(base.reverseStart, 9999);
+
+    return {
+        constVectMode,
+        position: normalizeLorebookPosition(settings?.position, normalizeLorebookPosition(base.position, 0)),
+        outletName: String(settings?.outletName !== undefined ? settings.outletName : base.outletName || '').trim(),
+        orderMode,
+        orderValue: clampLorebookOrderValue(settings?.orderValue, fallbackOrderValue),
+        reverseStart: clampLorebookReverseStart(settings?.reverseStart, fallbackReverseStart),
+        preventRecursion: settings?.preventRecursion !== undefined ? !!settings.preventRecursion : !!base.preventRecursion,
+        delayUntilRecursion: normalizeDelayUntilRecursion(settings?.delayUntilRecursion, normalizeDelayUntilRecursion(base.delayUntilRecursion)),
+        ignoreBudget: settings?.ignoreBudget !== undefined ? !!settings.ignoreBudget : !!base.ignoreBudget,
+    };
+}
+
+export function applyLorebookEntrySettings(entry, lorebookSettings = {}, options = {}) {
+    const normalized = normalizeLorebookEntrySettings(lorebookSettings);
+    const orderNumber = Number.isFinite(Number(options.orderNumber))
+        ? Math.max(1, Math.trunc(Number(options.orderNumber)))
+        : 1;
+
+    switch (normalized.constVectMode) {
+        case 'blue':
+            entry.constant = true;
+            entry.vectorized = false;
+            break;
+        case 'green':
+            entry.constant = false;
+            entry.vectorized = false;
+            break;
+        case 'link':
+        default:
+            entry.constant = false;
+            entry.vectorized = true;
+            break;
+    }
+
+    entry.position = normalized.position;
+    if (normalized.position === 7 && normalized.outletName) {
+        entry.outletName = normalized.outletName;
+    } else {
+        delete entry.outletName;
+    }
+
+    entry.order = computeLorebookEntryOrder(normalized, orderNumber, {
+        showOrderClampNotification: !!options.showOrderClampNotification,
+        orderNumberLabel: options.orderNumberLabel || 'entry',
+    });
+    entry.preventRecursion = normalized.preventRecursion;
+    entry.delayUntilRecursion = normalized.delayUntilRecursion;
+
+    for (const field of CONTROLLED_WORLD_INFO_DEFAULT_FIELDS) {
+        entry[field] = getWorldInfoDefaultValue(field);
+    }
+
+    entry.addMemo = true;
+    entry.ignoreBudget = normalized.ignoreBudget;
+    entry.displayIndex = orderNumber;
+    entry.stmemorybooks = true;
+
+    return { orderNumber, lorebookSettings: normalized };
+}
 
 /**
  * Adds a generated memory to the chat's bound lorebook.
@@ -123,7 +493,7 @@ const DEFAULT_TITLE_FORMATS = [
  * @param {string} lorebookValidation.name - Lorebook name
  * @returns {Promise<Object>} Result object with success status and details
  */
-export async function addMemoryToLorebook(memoryResult, lorebookValidation) {
+export async function addMemoryToLorebook(memoryResult, lorebookValidation, options = {}) {
 
     try {
         if (!memoryResult?.content) {
@@ -137,18 +507,31 @@ export async function addMemoryToLorebook(memoryResult, lorebookValidation) {
         const settings = extension_settings.STMemoryBooks || {};
         let titleFormat = memoryResult.titleFormat;
         if (!titleFormat) {
-            titleFormat = settings.titleFormat || i18n('addlore.titleFormats.8', '[000] - {{title}}');
+            titleFormat = settings.profiles?.[settings.defaultProfile]?.titleFormat || settings.titleFormat || i18n('addlore.titleFormats.8', '[000] - {{title}}');
         }
-        const refreshEditor = settings.moduleSettings?.refreshEditor !== false;
+        const refreshEditor = options.refreshEditor !== undefined
+            ? options.refreshEditor !== false
+            : settings.moduleSettings?.refreshEditor !== false;
 
         const lorebookSettings = memoryResult.lorebookSettings || {
             constVectMode: 'link',
             position: 0,
             orderMode: 'auto',
             orderValue: 100,
+            reverseStart: 9999,
             preventRecursion: false,
             delayUntilRecursion: true
         };
+
+        const effectiveMemoryResult = options.characterFilterNames
+            ? {
+                ...memoryResult,
+                metadata: {
+                    ...(memoryResult.metadata || {}),
+                    characterFilterNames: options.characterFilterNames,
+                },
+            }
+            : memoryResult;
 
         const newEntry = createWorldInfoEntry(lorebookValidation.name, lorebookValidation.data);
 
@@ -156,11 +539,21 @@ export async function addMemoryToLorebook(memoryResult, lorebookValidation) {
             throw new Error(i18n('addlore.errors.createEntryFailed', 'Failed to create new lorebook entry'));
         }
 
-        const entryTitle = generateEntryTitle(titleFormat, memoryResult, lorebookValidation.data);
-        populateLorebookEntry(newEntry, memoryResult, entryTitle, lorebookSettings);
+        const entryTitle = options.entryTitle
+            ? sanitizeTitle(String(options.entryTitle))
+            : generateEntryTitle(titleFormat, effectiveMemoryResult, lorebookValidation.data);
+        populateLorebookEntry(newEntry, effectiveMemoryResult, entryTitle, lorebookSettings);
+        if (options.inclusionGroup) {
+            newEntry.group = String(options.inclusionGroup);
+        }
+        if (options.entryMetadata && typeof options.entryMetadata === 'object') {
+            for (const [key, value] of Object.entries(options.entryMetadata)) {
+                newEntry[key] = value;
+            }
+        }
         await saveWorldInfo(lorebookValidation.name, lorebookValidation.data, true);
 
-        if (settings.moduleSettings?.showNotifications !== false) {
+        if (options.showNotification !== false && settings.moduleSettings?.showNotifications !== false) {
             toastr.success(
                 i18n('addlore.toast.added', 'Memory "{{entryTitle}}" added to "{{lorebookName}}"', { entryTitle: entryTitle, lorebookName: lorebookValidation.name }),
                 i18n('addlore.toast.title', 'STMemoryBooks')
@@ -176,61 +569,28 @@ export async function addMemoryToLorebook(memoryResult, lorebookValidation) {
         }
         
         // Execute auto-hide commands if enabled
-        const autoHideMode = getAutoHideMode(settings.moduleSettings);
+        const autoHidePlan = getAutoHideRanges(effectiveMemoryResult, settings.moduleSettings);
 
-        if (autoHideMode !== 'none') {
-            const unhiddenCount = settings.moduleSettings.unhiddenEntriesCount ?? 2;
-
-            if (autoHideMode === 'all') {
-                const sceneData = parseSceneRange(memoryResult.metadata?.sceneRange);
-
-                if (!sceneData) {
-                    console.warn(i18n('addlore.warn.autohideSkippedInvalidRange', `${MODULE_NAME}: Auto-hide skipped - invalid scene range: "{{range}}"`, { range: memoryResult.metadata?.sceneRange }));
-                    toastr.warning(
-                        i18n('addlore.toast.autohideInvalidRange', 'Auto-hide skipped: invalid scene range metadata'),
-                        i18n('addlore.toast.title', 'STMemoryBooks')
+        if (options.autoHide !== false && autoHidePlan.mode !== 'none') {
+            if (autoHidePlan.invalidRange) {
+                console.warn(i18n('addlore.warn.autohideSkippedInvalidRange', `${MODULE_NAME}: Auto-hide skipped - invalid scene range: "{{range}}"`, { range: autoHidePlan.rawRange }));
+                toastr.warning(
+                    i18n('addlore.toast.autohideInvalidRange', 'Auto-hide skipped: invalid scene range metadata'),
+                    i18n('addlore.toast.title', 'STMemoryBooks')
+                );
+            } else {
+                for (const range of autoHidePlan.ranges) {
+                    await safeExecuteHideCommand(
+                        `/hide ${range.start}-${range.end}`,
+                        i18n(range.contextKey, range.contextFallback),
                     );
-                } else {
-                    const { start: sceneStart, end: sceneEnd } = sceneData;
-
-                    if (unhiddenCount === 0) {
-                        await safeExecuteHideCommand(`/hide 0-${sceneEnd}`, i18n('addlore.hideCommand.allComplete', 'all mode - complete'));
-                    } else {
-                        const hideEndIndex = sceneEnd - unhiddenCount;
-                        if (hideEndIndex >= 0) {
-                            await safeExecuteHideCommand(`/hide 0-${hideEndIndex}`, i18n('addlore.hideCommand.allPartial', 'all mode - partial'));
-                        }
-                        // Auto-hide silently skipped if not enough messages
-                    }
-                }
-            } else if (autoHideMode === 'last') {
-                const sceneData = parseSceneRange(memoryResult.metadata?.sceneRange);
-                if (!sceneData) {
-                    console.warn(i18n('addlore.warn.autohideSkippedInvalidRange', `${MODULE_NAME}: Auto-hide skipped - invalid scene range: "{{range}}"`, { range: memoryResult.metadata?.sceneRange }));
-                    toastr.warning(
-                        i18n('addlore.toast.autohideInvalidRange', 'Auto-hide skipped: invalid scene range metadata'),
-                        i18n('addlore.toast.title', 'STMemoryBooks')
-                    );
-                } else {
-                    const { start: sceneStart, end: sceneEnd } = sceneData;
-                    const sceneSize = sceneEnd - sceneStart + 1;
-
-                    if (unhiddenCount >= sceneSize) {
-                        // No hiding needed - want to keep more messages than scene contains
-                    } else if (unhiddenCount === 0) {
-                        await safeExecuteHideCommand(`/hide ${sceneStart}-${sceneEnd}`, i18n('addlore.hideCommand.lastHideAll', 'last mode - hide all'));
-                    } else {
-                        const hideEnd = sceneEnd - unhiddenCount;
-                        if (hideEnd >= sceneStart) {
-                            await safeExecuteHideCommand(`/hide ${sceneStart}-${hideEnd}`, i18n('addlore.hideCommand.lastPartial', 'last mode - partial'));
-                        }
-                        // Auto-hide silently skipped if not enough scene messages
-                    }
                 }
             }
         }
         // Update highest memory processed tracking
-        updateHighestMemoryProcessed(memoryResult);
+        if (options.updateHighestMemoryProcessed !== false) {
+            updateHighestMemoryProcessed(effectiveMemoryResult);
+        }
 
         return {
             success: true,
@@ -275,70 +635,12 @@ function populateLorebookEntry(entry, memoryResult, entryTitle, lorebookSettings
     
     // Extract order number from title for auto-numbering
     const orderNumber = extractNumberFromTitle(entryTitle) || 1;
-    
-    // 1. Constant / Vectorized Mode
-    switch (lorebookSettings.constVectMode) {
-        case 'blue': // Constant
-            entry.constant = true;
-            entry.vectorized = false;
-            break;
-        case 'green': // Normal
-            entry.constant = false;
-            entry.vectorized = false;
-            break;
-        case 'link': // Vectorized (Default)
-        default:
-            entry.constant = false;
-            entry.vectorized = true;
-            break;
-    }
-    
-    // 2. Insertion Position
-    entry.position = lorebookSettings.position;
-
-    // 2a. Outlet Name for Outlet position (7)
-    if (Number(lorebookSettings.position) === 7) {
-        const outName = String(lorebookSettings.outletName || '').trim();
-        if (outName) {
-            entry.outletName = outName;
-        }
-    }
-
-    // 3. Insertion Order
-    if (lorebookSettings.orderMode === 'manual') {
-        entry.order = lorebookSettings.orderValue;
-    } else { // 'auto'
-        entry.order = orderNumber;
-    }
-
-    // 4. Recursion Settings
-    entry.preventRecursion = lorebookSettings.preventRecursion;
-    entry.delayUntilRecursion = lorebookSettings.delayUntilRecursion;
-
-    // Set other properties to match the tested lorebook structure
-    entry.keysecondary = [];
-    entry.selective = true;
-    entry.selectiveLogic = 0;
-    entry.addMemo = true;
-    entry.disable = false;
-    entry.excludeRecursion = false;
-    entry.probability = 100;
-    entry.useProbability = true;
-    entry.depth = 4;
-    entry.group = "";
-    entry.groupOverride = false;
-    entry.groupWeight = 100;
-    entry.scanDepth = null;
-    entry.caseSensitive = null;
-    entry.matchWholeWords = null;
-    entry.useGroupScoring = null;
-    entry.automationId = "";
-    entry.role = null;
-    entry.sticky = 0;
-    entry.cooldown = 0;
-    entry.delay = 0;
-    entry.displayIndex = orderNumber; // Use order number for display index
-    entry.stmemorybooks = true; // Explicitly mark as STMemoryBooks memory entry
+    applyLorebookEntrySettings(entry, lorebookSettings, {
+        orderNumber,
+        orderNumberLabel: 'memory',
+        showOrderClampNotification: true,
+    });
+    applyMemoryCharacterFilter(entry, memoryResult);
     if (memoryResult.metadata?.sceneRange) { // Set metadata for scene range if available
         const rangeParts = memoryResult.metadata.sceneRange.split('-');
         if (rangeParts.length === 2) {
@@ -346,7 +648,47 @@ function populateLorebookEntry(entry, memoryResult, entryTitle, lorebookSettings
             entry.STMB_end = parseInt(rangeParts[1], 10);
         }
     }
+    if (
+        memoryResult.metadata?.chatId !== undefined &&
+        memoryResult.metadata?.chatId !== null &&
+        memoryResult.metadata?.chatId !== ''
+    ) {
+        entry.STMB_chatId = String(memoryResult.metadata.chatId);
+    }
     
+}
+
+function applyMemoryCharacterFilter(entry, memoryResult) {
+    const names = normalizeCharacterFilterNames(memoryResult?.metadata?.characterFilterNames);
+    if (names.length === 0) {
+        return;
+    }
+
+    entry.characterFilter = {
+        isExclude: false,
+        names,
+        tags: [],
+    };
+}
+
+function normalizeCharacterFilterNames(value) {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+
+    const seen = new Set();
+    const names = [];
+    for (const item of value) {
+        const name = String(item || '').trim();
+        if (!name || seen.has(name)) {
+            continue;
+        }
+
+        seen.add(name);
+        names.push(name);
+    }
+
+    return names;
 }
 
 /**
@@ -372,43 +714,26 @@ export function isMemoryEntry(entry) {
  * @returns {string} The generated title
  */
 function generateEntryTitle(titleFormat, memoryResult, lorebookData) {
-    let title = titleFormat;
+    const nextNumber = getNextEntryNumber(lorebookData, titleFormat);
+    return generateEntryTitleAtNumber(titleFormat, memoryResult, nextNumber);
+}
 
-    // Auto-numbering: [0], [00], [000], ([0]), ({0}), #[0], etc.
-    const allNumberingPatterns = [
-        { pattern: /\[\[0+\]\]/g, prefix: '[', suffix: ']' }, // [[000]] -> [001]
-        { pattern: /\[0+\]/g, prefix: '', suffix: '' },       // [000] -> just number
-        { pattern: /\(\[0+\]\)/g, prefix: '(', suffix: ')' }, // ([000]) -> (001)
-        { pattern: /\{\[0+\]\}/g, prefix: '{', suffix: '}' }, // {[000]} -> {001}
-        { pattern: /#\[0+\]/g, prefix: '#', suffix: '' }      // #[000] -> #001
-    ];
-
-    for (const { pattern, prefix, suffix } of allNumberingPatterns) {
-        const matches = title.match(pattern);
-        if (matches) {
-            const nextNumber = getNextEntryNumber(lorebookData, titleFormat);
-
-            matches.forEach(match => {
-                let digits;
-                if (pattern.source.includes('\\[\\[')) {
-                    digits = match.length - 4; // [[000]] -> remove [[ and ]]
-                } else if (pattern.source.includes('\\(\\[') || pattern.source.includes('\\{\\[')) {
-                    digits = match.length - 4; // ([000]) or {[000]} -> remove outer delimiters and [ ]
-                } else if (pattern.source.includes('#\\[')) {
-                    digits = match.length - 3; // #[000] -> remove # and [ ]
-                } else if (pattern.source.includes('\\[')) {
-                    digits = match.length - 2; // [000] -> remove [ and ]
-                } else {
-                    digits = match.length - 2; // fallback
-                }
-                const paddedNumber = nextNumber.toString().padStart(digits, '0');
-                const replacement = prefix + paddedNumber + suffix;
-                title = title.replace(match, replacement);
-            });
-            break; // Only process the first pattern type found
-        }
+/**
+ * Generates a lorebook title while forcing an existing sequence number.
+ *
+ * @param {string} titleFormat - The title format template
+ * @param {Object} memoryResult - The memory generation result
+ * @param {number} sequenceNumber - The sequence number to preserve
+ * @param {Object} [options] - Replacement-specific formatting options
+ * @param {boolean} [options.forceNumber=false] - Prefix the number if the format has no number token
+ * @returns {string} The generated title
+ */
+export function generateEntryTitleAtNumber(titleFormat, memoryResult, sequenceNumber, options = {}) {
+    let title = applyFixedSequenceNumber(titleFormat, sequenceNumber);
+    if (options.forceNumber && !hasSequenceNumberPlaceholder(titleFormat)) {
+        title = `[${String(sequenceNumber).padStart(3, '0')}] ${title}`;
     }
-    
+
     // Template substitutions
     const metadata = memoryResult.metadata || {};
     const substitutions = {
@@ -799,6 +1124,9 @@ export function getRangeFromMemoryEntry(entry) {
 export async function getLorebookStats() {
     try {
         const context = await getContext();
+        // Intentionally do not use the shared interactive lorebook validator here.
+        // Stats are read-only; callers should receive a simple invalid result
+        // instead of being forced through lorebook recovery UI.
         const lorebookName = context.chatMetadata[METADATA_KEY];
         
         if (!lorebookName) {
@@ -874,6 +1202,7 @@ function updateHighestMemoryProcessed(memoryResult) {
 
         // Always update highestMemoryProcessed to the end of the memory we just created
         sceneMarkers.highestMemoryProcessed = endMessage;
+        delete sceneMarkers.highestMemoryProcessedManuallySet;
 
         // Save the metadata (works for both group chats and single-character chats)
         saveMetadataForCurrentContext();
@@ -978,7 +1307,7 @@ export async function upsertLorebookEntriesBatch(lorebookName, lorebookData, ite
     await saveWorldInfo(lorebookName, lorebookData, true);
 
     if (refreshEditor) {
-        reloadEditor(lorebookName);
+        await Promise.resolve(reloadEditor(lorebookName));
     }
 
     return results;
@@ -1054,7 +1383,7 @@ export async function upsertLorebookEntryByTitle(lorebookName, lorebookData, tit
 
     await saveWorldInfo(lorebookName, lorebookData, true);
     if (refreshEditor) {
-        reloadEditor(lorebookName);
+        await Promise.resolve(reloadEditor(lorebookName));
     }
 
     return { uid: entry.uid, created };

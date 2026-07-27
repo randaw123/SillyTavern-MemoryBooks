@@ -1,3 +1,6 @@
+// Copyright (C) 2024–2026 Aiko Hanasaki
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /**
  * Localization data for Memory Books extension
  * This file contains translation strings for the UI
@@ -109,8 +112,40 @@ export async function loadLocaleJson(lang) {
  * English (default) locale data
  */
 export const localeData_en = {
+    'STMemoryBooks_Regeneration_Button': 'Regenerate memory',
+    'STMemoryBooks_Regeneration_ButtonTooltip': 'Generate a replacement using current settings. Approval is always required.',
+    'STMemoryBooks_Regeneration_BlockedByParent': 'Delete the parent consolidation before regenerating this entry.',
+    'STMemoryBooks_Regeneration_MissingSources': 'The complete set of source entries cannot be recovered.',
+    'STMemoryBooks_Regeneration_MissingNumber': 'The original memory number cannot be determined.',
+    'STMemoryBooks_Regeneration_MissingRange': 'The original chat range is missing or invalid.',
+    'STMemoryBooks_Regeneration_Unavailable': 'This entry cannot be regenerated.',
+    'STMemoryBooks_Regeneration_UnhideSettingPath': 'Memory Books → General Settings → Token Saving (Hide/Unhide Messages) → "Unhide hidden messages for memory generation (runs /unhide X-Y)"',
+    'STMemoryBooks_Regeneration_NoVisibleTitle': 'No visible messages in the original range',
+    'STMemoryBooks_Regeneration_NoVisibleBody': 'Messages {{start}}-{{end}} are all hidden. Restore their visibility manually, or enable this setting: {{path}}. Then click Regenerate memory again.',
+    'STMemoryBooks_Regeneration_OpenGeneralSettings': 'Open General Settings',
+    'STMemoryBooks_Regeneration_WrongChat': 'This memory does not belong to the current chat. Open its source chat before regenerating it.',
+    'STMemoryBooks_Regeneration_Working': 'Regenerating memory...',
+    'STMemoryBooks_Regeneration_WorkingConsolidation': 'Regenerating consolidation...',
+    'STMemoryBooks_Regeneration_SingleResultRequired': 'Single Consolidation Analysis must generate exactly one consolidation.',
+    'STMemoryBooks_Regeneration_TargetChanged': 'The target entry changed while regeneration was running. Nothing was overwritten.',
+    'STMemoryBooks_Regeneration_SourceChanged': 'A source entry changed while regeneration was running. Nothing was overwritten.',
+    'STMemoryBooks_Regeneration_ChatChanged': 'The source chat messages changed while regeneration was running. Nothing was overwritten.',
+    'STMemoryBooks_Regeneration_Success': 'Memory regenerated successfully.',
+    'STMemoryBooks_Regeneration_Failed': 'Memory regeneration failed.',
+    'STMemoryBooks_Regeneration_LinkedWarningTitle': 'Linked copies will not be updated',
+    'STMemoryBooks_Regeneration_LinkedWarningBody': 'Approval replaces only the clicked entry. The following linked lorebooks are unchanged:',
+    'STMemoryBooks_Regeneration_ReviewDescription': 'Review the original and regenerated entry. Approval is required before anything is overwritten.',
+    'STMemoryBooks_Regeneration_Before': 'Before',
+    'STMemoryBooks_Regeneration_After': 'After',
+    'STMemoryBooks_Regeneration_Title': 'Title',
+    'STMemoryBooks_Regeneration_Content': 'Content',
+    'STMemoryBooks_Regeneration_Keywords': 'Keywords',
+    'STMemoryBooks_Regeneration_SemanticTitle': 'Semantic title',
+    'STMemoryBooks_Regeneration_FinalTitle': 'Final formatted title',
+    'STMemoryBooks_Regeneration_Approve': 'Approve replacement',
+
     // Main Settings Header
-    'STMemoryBooks_Settings': '📕 Memory Books Settings',
+    'STMemoryBooks_Settings': '📕 Memory Books',
 
     // Scene Display
     'STMemoryBooks_CurrentScene': 'Current Scene:',
@@ -118,21 +153,211 @@ export const localeData_en = {
     'STMemoryBooks_End': 'End',
     'STMemoryBooks_Message': 'Message',
     'STMemoryBooks_Messages': 'Messages',
+    'STMemoryBooks_Type': 'Type',
+    'STMemoryBooks_Clip_ButtonTitle': 'Clip highlighted text to Memory Book',
+    'STMemoryBooks_Clip_NoHighlightedText': 'Highlight text in the chat first, then click Clip.',
+    'STMemoryBooks_Clip_FloatingDisabled': 'Floating Clip button is disabled.',
+    'STMemoryBooks_Clip_SelectionOutsideChat': 'Selected text must be inside the chat.',
+    'STMemoryBooks_Clip_SelectionOutsideMessage': 'Select text inside the message you are clipping.',
+    'STMemoryBooks_Clip_OpenFailed': 'Failed to open Clip workflow.',
+    'STMemoryBooks_Clip_ModalTitle': 'Clip to Memory Book',
+    'STMemoryBooks_Clip_SelectedText': 'Selected text',
+    'STMemoryBooks_Clip_ExistingEntry': 'Existing clip entry',
+    'STMemoryBooks_Clip_CreateNewEntry': 'Create new clip entry',
+    'STMemoryBooks_Clip_Headline': 'Entry title / section headline',
+    'STMemoryBooks_Clip_NewHeadlinePlaceholder': 'New Clip Entry',
+    'STMemoryBooks_Clip_AlwaysInclude': 'Always include this entry',
+    'STMemoryBooks_Clip_ActivateByKeywords': 'Activate by keywords',
+    'STMemoryBooks_Clip_Keywords': 'Keywords',
+    'STMemoryBooks_Clip_CurrentContent': 'Current entry content',
+    'STMemoryBooks_Clip_UpdatedPreview': 'Updated entry preview',
+    'STMemoryBooks_Clip_SaveClip': 'Save Clip',
+    'STMemoryBooks_Clip_LongWarning': 'This clip entry is getting long. Long constant entries can waste context or crowd out more relevant memory. Review, edit, or compact it.',
+    'STMemoryBooks_Clip_CompactReview': 'Compaction',
+    'STMemoryBooks_Clip_ReplaceEntry': 'Replace with Compacted Version',
+    'STMemoryBooks_Clip_CopyCompactedText': 'Copy Compacted Draft',
+    'STMemoryBooks_Clip_SaveAnyway': 'Save Anyway',
+    'STMemoryBooks_Clip_ReviewEntry': 'Review Entry',
+    'STMemoryBooks_Clip_CompactWithAI': 'Compact Entry',
+    'STMemoryBooks_Clip_AddAnyway': 'Add Anyway',
+    'STMemoryBooks_Clip_DuplicateTitle': 'Duplicate Clip',
+    'STMemoryBooks_Clip_DuplicateMessage': 'This exact clip already exists in the selected entry.',
+    'STMemoryBooks_Clip_ConvertTitle': 'Convert Clip Entry',
+    'STMemoryBooks_Clip_ConvertMessage': 'This entry is marked as an STMB Clip entry but does not have the expected wrapper. Convert it to one wrapped section and preserve its current content?',
+    'STMemoryBooks_Clip_ConvertButton': 'Convert',
+    'STMemoryBooks_Clip_MultipleWrappersTitle': 'Multiple Clip Sections',
+    'STMemoryBooks_Clip_MultipleWrappersMessage': 'STMB Clip entries support one section per entry. Convert this entry to one section using the title-derived headline?',
+    'STMemoryBooks_Clip_ConvertOneSection': 'Convert to One Section',
+    'STMemoryBooks_Clip_LongEntryTitle': 'Long Clip Entry',
+    'STMemoryBooks_Clip_SaveSuccess': 'Clip saved to Memory Book.',
+    'STMemoryBooks_Clip_SaveFailed': 'Failed to save clip.',
+    'STMemoryBooks_Clip_OriginalContent': 'Original content',
+    'STMemoryBooks_Clip_CompactedContent': 'Compacted draft',
+    'STMemoryBooks_Clip_CopiedCompacted': 'Copied compacted text.',
+    'STMemoryBooks_Clip_ReplaceSuccess': 'Entry content replaced.',
+    'STMemoryBooks_Clip_CompactionFailed': 'Compaction request failed.',
+    'STMemoryBooks_Clip_CompactionEmpty': 'Compaction returned empty content.',
+    'STMemoryBooks_Compaction_Title': 'Compaction',
+    'STMemoryBooks_Compaction_Button': 'Compact Entry',
+    'STMemoryBooks_Compaction_Compacting': 'Compacting…',
+    'STMemoryBooks_Compaction_EditPrompt': 'Edit Compaction Prompt',
+    'STMemoryBooks_Compaction_PromptTitle': 'Compaction Prompt',
+    'STMemoryBooks_Compaction_ResetPrompt': 'Reset to Default',
+    'STMemoryBooks_Compaction_SavePrompt': 'Save Prompt',
+    'STMemoryBooks_Compaction_SelectMemoryBook': 'Select a Memory Book...',
+    'STMemoryBooks_Compaction_MemoryBook': 'Memory Book',
+    'STMemoryBooks_Compaction_Profile': 'Compaction Profile',
+    'STMemoryBooks_Compaction_SelectProfile': 'Select a Compaction profile...',
+    'STMemoryBooks_Compaction_NoLorebooks': 'No Memory Books were found.',
+    'STMemoryBooks_Compaction_NoSelectedLorebook': 'Select a Memory Book to see eligible entries.',
+    'STMemoryBooks_Compaction_NoEligibleEntries': 'No entries eligible for Compaction were found in this Memory Book.',
+    'STMemoryBooks_Compaction_OriginalContent': 'Original content',
+    'STMemoryBooks_Compaction_CompactedDraft': 'Compacted draft',
+    'STMemoryBooks_Compaction_CopyDraft': 'Copy Compacted Draft',
+    'STMemoryBooks_Compaction_Replace': 'Replace with Compacted Version',
+    'STMemoryBooks_Compaction_Failed': 'Compaction failed.',
+    'STMemoryBooks_Compaction_Empty': 'Compaction returned empty content.',
+    'STMemoryBooks_Compaction_PromptMissingEntryContent': 'The Compaction prompt must include {{ENTRY_CONTENT}}.',
+    'STMemoryBooks_Compaction_TypeClip': 'Clip',
+    'STMemoryBooks_Compaction_TypeSidePrompt': 'SidePrompt',
+    'STMemoryBooks_Compaction_TypeMemory': 'Memory',
+    'STMemoryBooks_TopicalClip_Title': 'Topical Clip',
+    'STMemoryBooks_TopicalClip_Button': 'Create Topical Clip',
+    'STMemoryBooks_TopicalClip_Description': 'Create or update a focused Clip-style memory entry about one topic.',
+    'STMemoryBooks_TopicalClip_OpenFailed': 'Failed to open Topical Clip',
+    'STMemoryBooks_TopicalClip_Mode': 'Mode',
+    'STMemoryBooks_TopicalClip_CreateNew': 'Create new Topical Clip',
+    'STMemoryBooks_TopicalClip_UpdateExisting': 'Update existing entry',
+    'STMemoryBooks_TopicalClip_SourceMemoryBook': 'Source Memory Book',
+    'STMemoryBooks_TopicalClip_Topic': 'Topic',
+    'STMemoryBooks_TopicalClip_Keywords': 'Keywords',
+    'STMemoryBooks_TopicalClip_KeywordsHelp': 'Saving updates this entry’s activation keywords. Empty keywords are filled from Topic.',
+    'STMemoryBooks_TopicalClip_TargetEntry': 'Entry to update',
+    'STMemoryBooks_TopicalClip_Profile': 'Generation Profile',
+    'STMemoryBooks_TopicalClip_EditPrompt': 'Edit Topical Clip Prompt',
+    'STMemoryBooks_TopicalClip_PromptTitle': 'Topical Clip Prompt',
+    'STMemoryBooks_TopicalClip_PromptMissingSourceMemories': 'The Topical Clip prompt must include {{SOURCE_MEMORIES}}.',
+    'STMemoryBooks_TopicalClip_GenerateDraft': 'Generate Draft',
+    'STMemoryBooks_TopicalClip_Save': 'Save Topical Clip',
+    'STMemoryBooks_TopicalClip_Draft': 'Generated draft',
+    'STMemoryBooks_TopicalClip_NoMemories': 'No STMB memory entries were found in this Memory Book.',
+    'STMemoryBooks_TopicalClip_EmptyTopic': 'Topic is required.',
+    'STMemoryBooks_TopicalClip_EmptyKeywords': 'Keywords are required.',
+    'STMemoryBooks_TopicalClip_NoTargetEntry': 'Choose an entry to update.',
+    'STMemoryBooks_TopicalClip_EmptyDraft': 'Generated draft is empty.',
+    'STMemoryBooks_TopicalClip_SaveSuccess': 'Topical Clip saved to Memory Book.',
+    'STMemoryBooks_TopicalClip_UpdateSuccess': 'Topical Clip entry updated.',
+    'STMemoryBooks_TopicalClip_SaveFailed': 'Failed to save Topical Clip.',
+    'STMemoryBooks_TopicalClip_DuplicateCreateTitle': 'An entry with this title already exists. Choose update mode or use a different topic/title.',
+    'STMemoryBooks_TopicalClip_Failed': 'Topical Clip generation failed.',
+    'STMemoryBooks_TopicalClip_NoNewMemories': 'No new STMB memory entries were found for this Topical Clip.',
+    'STMemoryBooks_TopicalClip_RebuildAll': 'Rebuild from all source memories',
+    'STMemoryBooks_TopicalClip_UseSelectedMemories': 'Use only selected memories',
+    'STMemoryBooks_TopicalClip_SourceMemoryPicker': 'Source memories',
+    'STMemoryBooks_TopicalClip_NoSelectedMemories': 'Select at least one source memory.',
+    'STMemoryBooks_TopicalClip_MetadataMissing': 'This entry has no Topical Clip run history. The first update will use all eligible source memories.',
+    'STMemoryBooks_TopicalClip_Diagnostics': 'Eligible source memories: {{eligible}}. Source memories to use: {{used}}. Token warning threshold: {{threshold}}.',
+    'STMemoryBooks_TopicalClip_EstimatedTokens': 'Estimated request tokens: {{tokens}}. Eligible source memories: {{eligible}}. Source memories to use: {{used}}. Token warning threshold: {{threshold}}.',
+    'STMemoryBooks_TopicalClip_TokenWarningTitle': 'Topical Clip token warning',
+    'STMemoryBooks_TopicalClip_TokenWarningMessage': 'This Topical Clip request is estimated at {{tokens}} tokens, above the warning threshold of {{threshold}}. Eligible source memories: {{eligible}}. Source memories to use: {{used}}.',
+    'STMemoryBooks_TopicalClip_TokenWarningAdvice': 'Raise the token warning threshold in settings, reduce source memories later, or allow this one run to continue.',
+    'STMemoryBooks_TopicalClip_RunOnceAnyway': 'Run Once Anyway',
+    'STMemoryBooks_TopicalClip_DraftReady': 'Draft generated. Review and edit before saving.',
+    'STMemoryBooks_TopicalClip_TargetChanged': 'The selected Clip changed after draft generation.',
+    'STMemoryBooks_TopicalClip_TargetChangedTitle': 'Selected Clip changed',
+    'STMemoryBooks_TopicalClip_TargetChangedMessage': 'The selected Clip changed after this draft was generated. Create a new Topical Clip entry instead, or abort without saving.',
+    'STMemoryBooks_TopicalClip_CreateNewInstead': 'Create New Entry',
+    'STMemoryBooks_Entry': 'Entry',
+    'STMemoryBooks_Tokens': 'Tokens',
+    'STMemoryBooks_Action': 'Action',
+    'STMemoryBooks_Jobs_Title': 'Memory Books Jobs',
+    'STMemoryBooks_Jobs_Memory': 'Memory',
+    'STMemoryBooks_Jobs_Consolidation': 'Consolidation',
+    'STMemoryBooks_Jobs_SidePrompt': 'Side Prompt',
+    'STMemoryBooks_Jobs_Queued': 'Queued',
+    'STMemoryBooks_Jobs_Running': 'Running',
+    'STMemoryBooks_Jobs_CapturingScene': 'Capturing scene',
+    'STMemoryBooks_Jobs_AssemblingPrompt': 'Assembling prompt',
+    'STMemoryBooks_Jobs_Generating': 'Generating',
+    'STMemoryBooks_Jobs_AwaitingApproval': 'Awaiting approval',
+    'STMemoryBooks_Jobs_NeedsReview': 'Needs review',
+    'STMemoryBooks_Jobs_Saving': 'Saving',
+    'STMemoryBooks_Jobs_PostSave': 'Post-save',
+    'STMemoryBooks_Jobs_Completed': 'Completed',
+    'STMemoryBooks_Jobs_Failed': 'Failed',
+    'STMemoryBooks_Jobs_Blocked': 'Blocked',
+    'STMemoryBooks_Jobs_Skipped': 'Skipped',
+    'STMemoryBooks_Jobs_Canceled': 'Canceled',
+    'STMemoryBooks_Jobs_ActiveSummary': '{{count}} active job(s)',
+    'STMemoryBooks_Jobs_ReviewSummary': '{{count}} need review',
+    'STMemoryBooks_Jobs_NoActive': 'No active jobs',
+    'STMemoryBooks_Jobs_DismissCompleted': 'Dismiss completed',
+    'STMemoryBooks_Jobs_Empty': 'No Memory Books jobs.',
+    'STMemoryBooks_Jobs_Cancel': 'Cancel',
+    'STMemoryBooks_Jobs_Retry': 'Retry',
+    'STMemoryBooks_Jobs_Lorebook': 'Lorebook',
+    'STMemoryBooks_Jobs_MemoryQueued': 'Memory job queued.',
+    'STMemoryBooks_Jobs_ConsolidationQueued': 'Consolidation job queued.',
+    'STMemoryBooks_Jobs_FinishBeforeChatChangeWarning': 'Let Memory Books jobs finish before changing chats. Auto-memory and auto-consolidation prompts are only reliable in the current chat.',
+    'STMemoryBooks_Jobs_ChatChangedActiveWarning': 'Memory Books jobs are still active. Auto-memory and auto-consolidation prompts may not run until you return or another trigger occurs.',
+    'STMemoryBooks_Jobs_TopInfoBarMissingNotice': 'Chat Top Bar is either disabled or not installed.\n\nThe optional Memory Books job queue uses Chat Top Bar to show the Jobs button and queue drawer. Chat Top Bar is an official SillyTavern extension by Cohee1207.\n\nInstall or enable Chat Top Bar to use job queueing. If you do not want to use Chat Top Bar, STMB will still work normally; only the job queue function will be unavailable.\n\nOfficial extension:\nhttps://github.com/SillyTavern/Extension-TopInfoBar',
+    'STMemoryBooks_Jobs_TopInfoBarInstall': 'Install Chat Top Bar',
+    'STMemoryBooks_Jobs_TopInfoBarMissingDismiss': 'Dismiss and never show this notification again.',
+    'STMemoryBooks_Clip_ReviewEntriesTitle': 'Compaction',
+    'STMemoryBooks_Clip_NoReviewableEntries': 'No STMB Clip or SidePrompt entries were found in the current Memory Book.',
+    'STMemoryBooks_Clip_ErrorEmptyHeadline': 'Entry title / section headline cannot be empty.',
+    'STMemoryBooks_Clip_ErrorInvalidHeadlineControl': 'Entry title / section headline cannot contain newlines or control characters.',
+    'STMemoryBooks_Clip_ErrorInvalidHeadlineSuffix': 'Entry title / section headline cannot contain [STMB Clip].',
+    'STMemoryBooks_Clip_ErrorInvalidHeadlineMarker': 'Entry title / section headline cannot contain ===.',
+    'STMemoryBooks_Clip_ErrorEmptySelectedText': 'Selected text cannot be empty.',
+    'STMemoryBooks_Clip_ErrorMissingEndMarker': 'Expected clip end marker was not found.',
+    'STMemoryBooks_Clip_ErrorDuplicateTitle': 'A clip entry with this title already exists.',
+    'STMemoryBooks_Clip_ErrorEntryNotFound': 'Selected clip entry was not found.',
+    'STMemoryBooks_Clip_ErrorKeywordsRequired': 'Keyword-activated clip entries require at least one keyword.',
+    'STMemoryBooks_Clip_ErrorCreateEntryFailed': 'Failed to create clip entry.',
     'STMemoryBooks_EstimatedTokens': 'Estimated tokens',
     'STMemoryBooks_NoSceneMarkers': 'No scene markers set. Use the chevron buttons in chat messages to mark start (►) and end (◄) points.',
+    'STMemoryBooks_NoVisibleMessages': 'Selected range has no visible messages. Adjust start/end.',
 
     // Memory Status
     'STMemoryBooks_MemoryStatus': 'Memory Status',
     'STMemoryBooks_ProcessedUpTo': 'Processed up to message',
+    'STMemoryBooks_LastProcessedManuallySet': 'last processed message manually set to',
     'STMemoryBooks_NoMemoriesProcessed': 'No memories have been processed for this chat yet',
     'STMemoryBooks_SinceVersion': '(since updating to version 3.6.2 or higher.)',
     'STMemoryBooks_AutoSummaryNote': 'Please note that Auto-Summary requires you to "prime" every chat with at least one manual memory. After that, summaries will be made automatically.',
+    
+    // /stmb-set-highest command
+    'STMemoryBooks_Slash_SetHighest_Help': 'Manually set the highest processed message index for this chat. Usage: /stmb-set-highest <N|none>',
+    'STMemoryBooks_Slash_SetHighest_ArgDesc': 'Message index (0-based) or "none" to reset',
+    'STMemoryBooks_SetHighest_MissingArg': 'Missing argument. Use: /stmb-set-highest <N|none>',
+    'STMemoryBooks_SetHighest_InvalidArg': 'Invalid argument. Use: /stmb-set-highest <N|none>',
+    'STMemoryBooks_SetHighest_NoMessages': 'There are no messages in this chat yet.',
+    'STMemoryBooks_SetHighest_Cleared': 'Last processed message cleared (no memories processed).',
+    'STMemoryBooks_SetHighest_OutOfRange': 'Message IDs out of range. Valid range: 0-{{max}}',
+    'STMemoryBooks_SetHighest_Clamped': 'Highest message is {{max}}, so last message processed has been set to {{max}}.',
+    'STMemoryBooks_SetHighest_SetTo': 'Last processed message manually set to #{{value}}.',
+    'STMemoryBooks_Slash_Stop_Help': 'Stop all in-flight STMB generation everywhere. Usage: /stmb-stop',
+    'STMemoryBooks_Stop_Stopped': 'STMB generation manually stopped by user.',
+    'STMemoryBooks_Stop_None': 'STMB stop issued, but no generation is in progress.',
 
     // Preferences Section
-    'STMemoryBooks_Preferences': 'Preferences:',
+    'STMemoryBooks_Preferences': 'General Settings',
     'STMemoryBooks_AlwaysUseDefault': 'Always use default profile (no confirmation prompt)',
     'STMemoryBooks_ShowMemoryPreviews': 'Show memory previews',
+    'STMemoryBooks_ShowMemoryPreviewsTooltip': 'Shows previews for memories and side prompts returned from the AI.',
     'STMemoryBooks_ShowNotifications': 'Show notifications',
+    'STMemoryBooks_ShowFloatingClipButton': 'Show floating Clip button when text is highlighted',
+    'STMemoryBooks_MemoryBoundaryMode': 'Memory boundary indicator',
+    'STMemoryBooks_MemoryBoundaryModeDesc': 'Show a chat divider, a jump button, or both at the Memory Books processed boundary.',
+    'STMemoryBooks_MemoryBoundaryModeOff': 'Off',
+    'STMemoryBooks_MemoryBoundaryModeDivider': 'Memory boundary',
+    'STMemoryBooks_MemoryBoundaryModeButton': 'Jump button',
+    'STMemoryBooks_MemoryBoundaryModeBoth': 'Memory boundary + jump button',
+    'STMemoryBooks_MemoryBoundaryLabel': 'Memory Books boundary',
+    'STMemoryBooks_JumpToUnprocessedMemory': 'Jump to first unprocessed message',
+    'STMemoryBooks_NoMemoriesProcessedYet': 'No memories have been processed for this chat yet.',
+    'STMemoryBooks_TargetNotRendered': 'Highest memory is #{{messageId}}. Scroll up or load more messages to reach it.',
     'STMemoryBooks_UnhideBeforeMemory': 'Unhide hidden messages for memory generation (runs /unhide X-Y)',
 
     // Manual Mode
@@ -153,20 +378,72 @@ export const localeData_en = {
     'STMemoryBooks_NoneSelected': 'None selected',
     'STMemoryBooks_UsingChatBound': 'Using chat-bound lorebook',
     'STMemoryBooks_NoChatBound': 'No chat-bound lorebook. Memories will require lorebook selection.',
+    'STMemoryBooks_NoManualLorebookSelected': 'No manual lorebook is currently selected for this chat.',
+    'STMemoryBooks_NoChatLorebookSelected': 'No chat-bound lorebook is currently selected.',
+    'STMemoryBooks_CreateLorebookToContinue': 'Create a new lorebook to continue.',
+    'STMemoryBooks_NoExistingLorebooksAvailable': 'No existing lorebooks are available to select.',
+    'STMemoryBooks_MemoryLorebookMissingTitle': 'Memory Lorebook Missing',
+    'STMemoryBooks_CreateNewLorebookButton': 'Create New Lorebook',
+    'STMemoryBooks_SelectExistingLorebookButton': 'Select Existing Lorebook',
+    'STMemoryBooks_LorebookRecoveryCancelled': 'Lorebook recovery cancelled.',
+    'STMemoryBooks_UnableToResolveValidLorebook': 'Unable to resolve a valid lorebook.',
+    'STMemoryBooks_Error_NoValidLorebookAvailable': 'No valid lorebook available.',
+    'STMemoryBooks_Clear': 'Clear',
+    'STMemoryBooks_GroupCharacterLorebooks': 'Group Character Lorebooks',
+    'STMemoryBooks_GroupCharacterLorebooksDesc': 'Select a lorebook for every group member. The same character lorebook may be selected more than once. Selections add STLO speaking filters; clearing a selection retains its STLO filter.',
+    'STMemoryBooks_GroupCharacterLorebooksRequiresSTLO': 'Individual lorebook designation requires SillyTavern-LorebookOrdering.',
+    'STMemoryBooks_GroupLorebooksNoMembers': 'No group members are available for manual lorebook setup.',
+    'STMemoryBooks_GroupManualLorebooksIncomplete': 'Group manual lorebooks are incomplete: {{details}}',
+    'STMemoryBooks_GroupManualLorebookMissing': '{{name}}: no lorebook selected',
+    'STMemoryBooks_GroupManualLorebookDeleted': '{{name}}: "{{lorebookName}}" not found',
+    'STMemoryBooks_GroupManualLorebookCanonicalConflict': '{{name}}: the group Memory Book "{{lorebookName}}" cannot also be a character Memory Book',
+    'STMemoryBooks_GroupCharacterLorebookStloSyncFailed': 'Failed to update STLO character filters for "{{lorebookName}}": {{message}}',
+    'STMemoryBooks_CharacterLorebookUnavailableGroupBook': 'Unavailable group Memory Book: {{name}}',
+    'STMemoryBooks_GroupMemberLorebookSet': '{{name}} manual lorebook set to "{{lorebookName}}"',
+    'STMemoryBooks_GroupMemberLorebookCleared': '{{name}} manual lorebook cleared',
+    'STMemoryBooks_GroupMemberLorebookClearedStloRetained': '{{name}} manual lorebook cleared. Its STLO character filter was retained; remove it in STLO if it is no longer needed.',
+    'STMemoryBooks_ManualLorebookUnavailableCharacterBook': 'Unavailable character Memory Book: {{name}}',
+    'STMemoryBooks_ManualLorebookCharacterConflict': 'A character Memory Book cannot also be the main group Memory Book.',
+    'STMemoryBooks_PleaseSelectGroupLorebookForManualMode': 'Please select a group lorebook for manual mode',
+    'STMemoryBooks_GroupParticipants_Title': 'Confirm memory participants',
+    'STMemoryBooks_GroupParticipants_Desc': 'Select the characters this memory applies to. If none are selected, it will apply to every group character.',
+    'STMemoryBooks_GroupParticipants_AutoAccept': 'Automatically accept detected participants in future',
+    'STMemoryBooks_GroupConsolidation_PartialTitle': 'Some lorebooks are below the threshold',
+    'STMemoryBooks_GroupConsolidation_PartialDesc': 'Some bound lorebooks do not have enough eligible entries to create a {{targetLabel}}. Continue with the ready lorebooks?',
+    'STMemoryBooks_GroupConsolidation_CreatedMany': 'Created {{count}} consolidated summaries across bound lorebooks.',
+    'STMemoryBooks_GroupConsolidation_PreviewSingleWarning': 'Consolidation previews currently review the group lorebook only. Disable previews or enable background jobs to process all bound lorebooks together.',
+    'STMemoryBooks_GroupConsolidation_RemainingCanceled': 'Remaining consolidation canceled.',
+    'STMemoryBooks_Jobs_ConsolidationQueuedMany': '{{count}} consolidation jobs queued.',
+    'STMemoryBooks_Ready': 'Ready',
+    'STMemoryBooks_Skipped': 'Skipped',
+    'STMemoryBooks_Continue': 'Continue',
 
     // Scene Options
     'STMemoryBooks_AllowSceneOverlap': 'Allow scene overlap',
+    'STMemoryBooks_AllowSceneOverlapTooltip': 'By default, STMB avoids message ID overlap between memories. Select this box to skip that check.',
     'STMemoryBooks_AllowSceneOverlapDesc': 'Check this box to skip checking for overlapping memories/scenes.',
     'STMemoryBooks_RefreshEditor': 'Refresh lorebook editor after adding memories',
+    'STMemoryBooks_MaxTokens': 'Max Response Tokens:',
+    'STMemoryBooks_MaxTokensDesc': 'Maximum number of tokens to use for memory summaries. Enter \'0\' to default to Chat Completion preset settings.',
 
     // Auto-Summary
     'STMemoryBooks_AutoSummaryEnabled': 'Auto-create memory summaries',
     'STMemoryBooks_AutoSummaryDesc': 'Automatically run /nextmemory after a specified number of messages.',
+    'STMemoryBooks_AutoSummaryWarnTooltip': 'Warning: enabling Auto-Summary may create one large memory from the existing backlog. Use /stmb-set-highest <N|none> to control the baseline.',
     'STMemoryBooks_AutoSummaryInterval': 'Auto-Summary Interval:',
     'STMemoryBooks_AutoSummaryIntervalDesc': 'Number of messages after which to automatically create a memory summary.',
     'STMemoryBooks_AutoSummaryBuffer': 'Auto-Summary Buffer:',
     'STMemoryBooks_AutoSummaryBufferDesc': 'Delay auto-summary by X messages (belated generation). Default 2, max 50.',
-    'STMemoryBooks_DefaultInterval': '50',
+    'STMemoryBooks_AutoConsolidationEnabled': 'Prompt for consolidation when a tier is ready',
+    'STMemoryBooks_AutoConsolidationDesc': 'Shows a yes/no prompt when any selected summary tier has enough eligible source entries. Uses each tier\'s saved minimum.',
+    'STMemoryBooks_AutoConsolidationTier': 'Auto-Consolidation Tiers:',
+    'STMemoryBooks_AutoConsolidationTierDesc': 'Choose which summary tiers should trigger the confirmation prompt.',
+    'STMemoryBooks_AutoConsolidationTierPlaceholder': 'Select tiers…',
+    'STMemoryBooks_AutoConsolidationPrompt_Title': 'Consolidation Available',
+    'STMemoryBooks_AutoConsolidationPrompt_Body': 'You now have {{count}} eligible {{sourcePlural}}. That meets the minimum of {{min}} needed to create a {{targetLabel}}.',
+    'STMemoryBooks_AutoConsolidationPrompt_Question': 'Open Consolidate Memories now?',
+    'STMemoryBooks_OpenConsolidation': 'Open Consolidation',
+    'STMemoryBooks_Later': 'Later',
 
     // Auto-Summary Popup and Messages
     'STMemoryBooks_AutoSummaryReadyTitle': 'Auto-Summary Ready',
@@ -208,12 +485,14 @@ export const localeData_en = {
     // Unhidden Count
     'STMemoryBooks_UnhiddenCount': 'Messages to leave unhidden:',
     'STMemoryBooks_UnhiddenCountDesc': 'Number of recent messages to leave visible when auto-hiding (0 = hide all up to scene end)',
-    'STMemoryBooks_DefaultUnhidden': '0',
+    'STMemoryBooks_TokenSaving': 'Token Saving (Hide/Unhide Messages)',
+
+    // Automatic Memories
+    'STMemoryBooks_AutoMemory': 'Automatic Memories',
 
     // Token Warning
     'STMemoryBooks_TokenWarning': 'Token Warning Threshold:',
-    'STMemoryBooks_TokenWarningDesc': 'Show confirmation dialog when estimated tokens exceed this threshold. Default: 30,000',
-    'STMemoryBooks_DefaultTokenWarning': '30000',
+    'STMemoryBooks_TokenWarningDesc': 'Show confirmation dialog when estimated total tokens to be sent to the AI exceed this threshold. Default: 30,000',
 
     // Title Format
     'STMemoryBooks_TitleFormat': 'Memory Title Format:',
@@ -232,8 +511,10 @@ export const localeData_en = {
     'STMemoryBooks_ViewPrompt': 'View Prompt',
     'STMemoryBooks_ProfileActions': 'Profile Actions:',
     'STMemoryBooks_extraFunctionButtons': 'Import/Export Profiles:',
-    'STMemoryBooks_promptManagerButtons': 'Prompt Managers',
-    'STMemoryBooks_PromptManagerButtonsHint': 'Want to tweak things? Use the buttons below to customize each prompt type.',
+    'STMemoryBooks_promptManagerButtons': 'Settings',
+    'STMemoryBooks_PromptManagerButtonsHint': 'Use the buttons below to explore customization options.',
+    'STMemoryBooks_FailedToOpenSettings': 'Failed to open settings',
+    'STMemoryBooks_FailedToOpenAutomaticMemoriesSettings': 'Failed to open Automatic Memories settings',
 
     // Confirmation Popup
     'STMemoryBooks_CreateMemory': 'Create Memory',
@@ -302,6 +583,10 @@ export const localeData_en = {
 
     // Profile Editor - Preset management
     'STMemoryBooks_Profile_MemoryMethod': 'Memory Creation Method:',
+    'STMemoryBooks_Profile_UseGroupSpecificPrompts': 'Use separate group and character prompts in group chats',
+    'STMemoryBooks_Profile_UseGroupSpecificPromptsDesc': 'When enabled, group-chat memories use the group prompt for the group lorebook and the character prompt for character-focused targets.',
+    'STMemoryBooks_Profile_GroupPreset': 'Group Summary Prompt:',
+    'STMemoryBooks_Profile_CharacterPreset': 'Character Summary Prompt:',
     'STMemoryBooks_Profile_PresetSelectDesc': 'Choose a preset. Create and edit presets in the Summary Prompt Manager.',
     'STMemoryBooks_CustomPromptManaged': 'Custom prompts are now controlled by the Summary Prompt Manager.',
     'STMemoryBooks_OpenPromptManager': '🧩 Open Summary Prompt Manager',
@@ -313,6 +598,7 @@ export const localeData_en = {
     'STMemoryBooks_SidePrompts_Title': '🎡 Trackers & Side Prompts',
     'STMemoryBooks_SidePrompts_Desc': 'Create and manage side prompts for trackers and other behind-the-scenes functions.',
     'STMemoryBooks_EditSidePrompt': 'Edit Side Prompt',
+    'STMemoryBooks_FailedToEditSidePrompt': 'Failed to edit SidePrompt',
     'STMemoryBooks_ResponseFormatPlaceholder': 'Optional response format',
     'STMemoryBooks_PreviousMemoriesHelp': 'Number of previous memory entries to include before scene text (0 = none).',
     'STMemoryBooks_Name': 'Name',
@@ -347,6 +633,60 @@ export const localeData_en = {
     'STMemoryBooks_SidePrompts_RecreateFailed': 'Failed to recreate built-in side prompts',
     'STMemoryBooks_SidePrompts_MaxConcurrentLabel': 'Max concurrent side prompts',
     'STMemoryBooks_SidePrompts_MaxConcurrentHelp': 'This controls how many side prompts can be running at one time. Lower this value if you have a slow connection or are running into rate limits. Default: 3',
+    'STMemoryBooks_AfterMemorySidePromptMode': 'After-memory side prompt mode for this chat',
+    'STMemoryBooks_UseIndividuallyEnabledSidePrompts': 'Use individually-enabled side prompts',
+    'STMemoryBooks_InheritSoloSidePromptDefault': 'Inherit solo chat default',
+    'STMemoryBooks_InheritGroupSidePromptDefault': 'Inherit group chat default',
+    'STMemoryBooks_SidePromptSetModeHelp': 'Inherit uses the matching solo or group default. You can explicitly use individually-enabled side prompts or select a specific set for this chat.',
+    'STMemoryBooks_SidePromptSetModeSaved': 'After-memory side prompt mode saved for this chat.',
+    'STMemoryBooks_DefaultAfterMemorySidePromptSets': 'Default After-Memory Side Prompt Sets',
+    'STMemoryBooks_DefaultAfterMemorySidePromptSetsHelp': 'Chats without a per-chat override inherit the matching default. An empty selection uses individually-enabled side prompts.',
+    'STMemoryBooks_DefaultSoloSidePromptSet': 'Default for solo chats',
+    'STMemoryBooks_DefaultGroupSidePromptSet': 'Default for group chats',
+    'STMemoryBooks_SidePromptSets': 'Side Prompt Sets',
+    'STMemoryBooks_SidePromptSetsHelp': 'Sets define which side prompts run instead of individually-enabled after-memory side prompts when a chat selects that set.',
+    'STMemoryBooks_NewSidePromptSet': 'New Set',
+    'STMemoryBooks_EditSidePromptSet': 'Edit Side Prompt Set',
+    'STMemoryBooks_UntitledSidePromptSet': 'Untitled Side Prompt Set',
+    'STMemoryBooks_NoSidePromptSetsAvailable': 'No side prompt sets available',
+    'STMemoryBooks_SetName': 'Set Name',
+    'STMemoryBooks_SetEditorHelp': 'Each row runs one side prompt. You can use literal macro values or set-level macros like {{npc_1}} for /sideprompt-macroset.',
+    'STMemoryBooks_AddSetItem': 'Add Row',
+    'STMemoryBooks_SetItemLabel': 'Row Label / Title',
+    'STMemoryBooks_SetItemLabelPlaceholder': 'Optional title for this row',
+    'STMemoryBooks_MacroValues': 'Macro Values',
+    'STMemoryBooks_NoRuntimeMacrosForSidePrompt': 'No runtime macros for this side prompt.',
+    'STMemoryBooks_SetMacroValuePlaceholder': 'Literal value or set macro, e.g. {{npc_1}}',
+    'STMemoryBooks_SidePrompt': 'Side Prompt',
+    'STMemoryBooks_Items': 'Items',
+    'STMemoryBooks_MoveUp': 'Move up',
+    'STMemoryBooks_MoveDown': 'Move down',
+    'STMemoryBooks_SidePromptSetSaved': 'Side prompt set saved.',
+    'STMemoryBooks_SidePromptSetDuplicated': 'Side prompt set duplicated.',
+    'STMemoryBooks_SidePromptSetDeleted': 'Side prompt set deleted.',
+    'STMemoryBooks_FailedToSaveSidePromptSet': 'Failed to save side prompt set.',
+    'STMemoryBooks_FailedToDuplicateSidePromptSet': 'Failed to duplicate side prompt set.',
+    'STMemoryBooks_FailedToDeleteSidePromptSet': 'Failed to delete side prompt set.',
+    'STMemoryBooks_DeleteSidePromptSetTitle': 'Delete Side Prompt Set',
+    'STMemoryBooks_DeleteSidePromptSetConfirm': 'Delete "{{name}}"? Chats inheriting a matching default, and this chat if it explicitly uses the set, will reset to individually-enabled after-memory side prompts. Other chats with an explicit override to this set will keep a missing selection until another mode is chosen.',
+    'STMemoryBooks_MissingSidePromptSetOption': 'Missing set: {{key}}',
+    'STMemoryBooks_CreateSidePromptBeforeSet': 'Create a side prompt before creating a set.',
+    'STMemoryBooks_SetNeedsItem': 'Add at least one side prompt to the set.',
+    'STMemoryBooks_SidePromptSetMissingNoFallback': 'Selected side prompt set was not found. No after-memory side prompts were run.',
+    'STMemoryBooks_SidePromptSetSkippedUnresolvedMacros': 'Skipped side prompt set items with unresolved macros: {{macros}}.',
+    'STMemoryBooks_Toast_SidePromptSetNameNotProvided': 'Side prompt set name not provided. Usage: /sideprompt-set "Name" [X-Y]',
+    'STMemoryBooks_Toast_SidePromptSetNotFound': 'Side prompt set not found. Check name.',
+    'STMemoryBooks_Toast_NoRunnableSidePromptsInSet': 'No runnable side prompts were found in this set.',
+    'STMemoryBooks_Toast_InvalidSetMessageRange': 'Invalid message range for /sideprompt-set',
+    'STMemoryBooks_Toast_SidePromptSetRangeTip': 'Tip: You can run a specific range with /sideprompt-set "Name" X-Y. Running without a range uses messages since the last checkpoint.',
+    'STMemoryBooks_Toast_FailedToCompileSetMessages': 'Failed to compile messages for /sideprompt-set',
+    'STMemoryBooks_SidePromptSetGuide': 'SidePrompt set guide: Choose a quoted set name. Usage: /sideprompt-set "Name" [X-Y].',
+    'STMemoryBooks_SidePromptMacroSetGuide': 'SidePrompt macroset guide: Choose a quoted set name, then fill any prompted macros. Usage: /sideprompt-macroset "Name" {{macro}}="value" [X-Y].',
+    'STMemoryBooks_Slash_SidePromptSet_Help': 'Run side prompt set. Usage: /sideprompt-set "Name" [X-Y]',
+    'STMemoryBooks_Slash_SidePromptSet_ArgDesc': 'Quoted set name, optionally followed by X-Y range',
+    'STMemoryBooks_Slash_SidePromptMacroSet_Help': 'Run side prompt set with runtime macros. Usage: /sideprompt-macroset "Name" {{macro}}="value" [X-Y]',
+    'STMemoryBooks_Slash_SidePromptMacroSet_ArgDesc': 'Quoted set name, then any required {{macro}}="value" assignments, optionally followed by X-Y range',
+    'STMemoryBooks_ImportedSidePromptSetsDetail': '; sets: {{setsAdded}} added{{setsDetail}}',
     'STMemoryBooks_SidePromptCreated': 'SidePrompt "{{name}}" created.',
     'STMemoryBooks_FailedToCreateSidePrompt': 'Failed to create SidePrompt.',
     'STMemoryBooks_SidePromptDuplicated': 'SidePrompt "{{name}}" duplicated.',
@@ -356,18 +696,37 @@ export const localeData_en = {
     'STMemoryBooks_SidePromptsExported': 'Side prompts exported.',
     'STMemoryBooks_FailedToExportSidePrompts': 'Failed to export side prompts.',
     'STMemoryBooks_ImportedSidePrompts': 'Imported {{count}} side prompts.',
-    'STMemoryBooks_ImportedSidePromptsDetail': 'Imported side prompts: {{added}} added{{detail}}',
+    'STMemoryBooks_ImportedSidePromptsDetail': 'Imported side prompts: {{added}} added{{detail}}{{setDetail}}',
     'STMemoryBooks_ImportedSidePromptsRenamedDetail': ' ({{count}} renamed due to key conflicts)',
+    'STMemoryBooks_RuntimeMacroImportStripped': 'Stripped automatic triggers from imported side prompts because they contain custom runtime macros: {{details}}.',
     'STMemoryBooks_FailedToImportSidePrompts': 'Failed to import side prompts.',
     'STMemoryBooks_DeleteSidePromptTitle': 'Delete Side Prompt',
     'STMemoryBooks_DeleteSidePromptConfirm': 'Are you sure you want to delete "{{name}}"?',
     'STMemoryBooks_NameEmptyKeepPrevious': 'Name was empty. Keeping previous name.',
     'STMemoryBooks_SidePrompts_NoNameProvidedUsingUntitled': 'No name provided. Using "Untitled Side Prompt".',
+    'STMemoryBooks_SidePromptLorebookSourceChat': 'Chat override',
+    'STMemoryBooks_SidePromptLorebookSourceTemplate': 'Side prompt setting',
+    'STMemoryBooks_SidePromptLorebookSourceMemory': 'Memory book default',
+    'STMemoryBooks_SidePromptLorebookSameAsMemoryNamed': 'Same as memory lorebook ({{name}})',
+    'STMemoryBooks_SidePromptLorebookSameAsMemoryNone': 'Same as memory lorebook (none selected)',
+    'STMemoryBooks_SidePromptLorebookTarget': 'Lorebook Target',
+    'STMemoryBooks_SidePromptLorebookCurrentTarget': 'Current Target:',
+    'STMemoryBooks_SidePromptLorebookSource': 'Source:',
+    'STMemoryBooks_SidePromptLorebookSaveTo': 'Save side prompt entry to:',
+    'STMemoryBooks_SidePromptLorebookHelp': 'Changing this target will ask whether to save it for this chat only or for this side prompt going forward.',
+    'STMemoryBooks_SaveLorebookTarget': 'Save Lorebook Target',
+    'STMemoryBooks_SaveLorebookTargetDesc': 'Save this side prompt lorebook target for this chat only, or for this side prompt going forward?',
+    'STMemoryBooks_ThisChatOnly': 'This chat only',
+    'STMemoryBooks_ThisSidePromptGoingForward': 'This side prompt going forward',
 
     // General / Menu
     'STMemoryBooks_MenuItem': 'Memory Books',
+    'STMemoryBooks_OK': 'OK',
+    'STMemoryBooks_Apply': 'Apply',
     'STMemoryBooks_Close': 'Close',
+    'STMemoryBooks_GoBack': 'Go back',
     'STMemoryBooks_NoMatches': 'No matches',
+    'STMemoryBooks_Untitled': 'Untitled',
 
     // Side Prompt Picker
     'STMemoryBooks_RunSidePrompt': 'Run Side Prompt',
@@ -389,8 +748,8 @@ export const localeData_en = {
     'STMemoryBooks_SelectDifferent': 'Select Different',
 
     // Slash Commands
-    'STMemoryBooks_SidePromptGuide': 'SidePrompt guide: Type a template name after the space to see suggestions. Usage: /sideprompt "Name" [X-Y]. Quote names with spaces.',
-    'STMemoryBooks_MultipleMatches': 'Multiple matches: {{top}}{{more}}. Refine the name or use quotes. Usage: /sideprompt "Name" [X-Y]',
+    'STMemoryBooks_SidePromptGuide': 'SidePrompt guide: Choose a quoted template name, then fill any prompted macros. Usage: /sideprompt "Name" {{macro}}="value" [X-Y].',
+    'STMemoryBooks_MultipleMatches': 'Multiple matches: {{top}}{{more}}. Refine the name. Usage: /sideprompt "Name" {{macro}}="value" [X-Y]',
 
     // Prompt Manager
     'STMemoryBooks_ClearCustomPromptTitle': 'Clear Custom Prompt?',
@@ -411,6 +770,12 @@ export const localeData_en = {
     'STMemoryBooks_APIProvider': 'API/Provider:',
     'STMemoryBooks_CustomAPI': 'Custom API',
     'STMemoryBooks_APIProfileConfigHint': '💡 Profile Setup Hint: STMB automatically reads API info and keys from your ST config. First, configure and test your connection in ST using Test Message. Then select it from the dropdown above to use those settings for memory generation. Only use Full Manual Configuration if you need two different Custom OpenAI-Compatible setups; otherwise, just create two connection profiles in ST—one for roleplay and one for Memory Books.',
+    'STMemoryBooks_SkipStructuredOutput': 'Skip structured output and use plain-text completion',
+    'STMemoryBooks_UseChatCompletionService': 'Use ST\'s ChatCompletionService',
+    'STMemoryBooks_UseChatCompletionServiceDesc': 'Routes this profile through SillyTavern\'s built-in chat completion request helper. Full Manual profiles are not affected.',
+    'STMemoryBooks_ChatCompletionPreset': 'Chat Completion Preset:',
+    'STMemoryBooks_ChatCompletionPresetDesc': 'Optional. Applies a SillyTavern chat completion preset through ChatCompletionService.processRequest.',
+    'STMemoryBooks_NoChatCompletionPreset': 'No Chat Completion preset',
     'STMemoryBooks_FullManualConfig': 'Full Manual Configuration',
     'STMemoryBooks_TemperatureRange': 'Temperature (0.0 - 2.0):',
     'STMemoryBooks_TemperaturePlaceholder': 'DO NOT LEAVE BLANK! If unsure put 0.8.',
@@ -418,17 +783,88 @@ export const localeData_en = {
     'STMemoryBooks_APIEndpointPlaceholder': 'https://api.example.com/v1/chat/completions',
     'STMemoryBooks_APIKey': 'API Key:',
     'STMemoryBooks_APIKeyPlaceholder': 'Enter your API key',
+    'STMemoryBooks_ReverseProxy': 'Use reverse proxy',
+    'STMemoryBooks_ProxyPassword': 'Proxy Password:',
+    'STMemoryBooks_ProxyPasswordPlaceholder': 'Enter proxy password',
+    'STMemoryBooks_Profile_AlsoInclude': 'Also include:',
+    'STMemoryBooks_Profile_AlsoIncludeDesc': 'Include selected lorebook entries as additional reference context when creating memories with this profile. Entries will be included in the order below. Drag and drop to reorder.',
+    'STMemoryBooks_Profile_AlsoIncludeLorebook': 'Lorebook',
+    'STMemoryBooks_Profile_AlsoIncludeEntry': 'Entry',
+    'STMemoryBooks_Profile_AlsoIncludeAdd': 'Add',
+    'STMemoryBooks_Profile_AlsoIncludeEmpty': 'No additional context entries selected.',
+    'STMemoryBooks_Profile_AlsoIncludeNoLorebooks': 'No lorebooks found',
+    'STMemoryBooks_Profile_AlsoIncludeSelectLorebook': 'Select a lorebook...',
+    'STMemoryBooks_Profile_AlsoIncludeSelectEntry': 'Select an entry...',
+    'STMemoryBooks_Profile_AlsoIncludeLoadingEntries': 'Loading entries...',
+    'STMemoryBooks_Profile_AlsoIncludeNoEntries': 'No entries found',
+    'STMemoryBooks_Profile_AlsoIncludeLoadFailed': 'Failed to load entries',
+    'STMemoryBooks_Profile_AlsoIncludeLoadFailedShort': 'Load failed',
+    'STMemoryBooks_Profile_AlsoIncludeMissingLorebook': 'Missing lorebook',
+    'STMemoryBooks_Profile_AlsoIncludeMissingEntry': 'Missing entry',
+    'STMemoryBooks_Profile_AlsoIncludeStale': 'Stale',
+    'STMemoryBooks_Profile_AlsoIncludeDrag': 'Drag to reorder',
+    'STMemoryBooks_Profile_AlsoIncludeRemove': 'Remove',
+    'STMemoryBooks_Profile_AlsoIncludeMissingSelection': 'Choose a lorebook and entry first.',
+    'STMemoryBooks_Profile_AlsoIncludeDuplicate': 'That entry is already included in this profile.',
+    'STMemoryBooks_Profile_AlsoIncludeSkipped': 'Some additional context entries could not be loaded and were skipped.',
+    'STMemoryBooks_ContextSettings_Title': 'Context Settings',
+    'STMemoryBooks_ContextSettings_Singular': 'Context Setting',
+    'STMemoryBooks_ContextSettings_Untitled': 'Untitled Context Setting',
+    'STMemoryBooks_ContextSettings_AdditionalContext': 'Additional Context',
+    'STMemoryBooks_ContextSettings_Desc': 'Context settings define ordered lorebook entries to include as Additional Context for memory creation.',
+    'STMemoryBooks_ContextSettings_Entries': 'Entries',
+    'STMemoryBooks_ContextSettings_EntriesDesc': 'Include selected lorebook entries as additional reference context. Entries run in the order below.',
+    'STMemoryBooks_ContextSettings_NoneAvailable': 'No context settings available',
+    'STMemoryBooks_ContextSettings_CurrentChat': 'Additional Context for this chat',
+    'STMemoryBooks_ContextSettings_CurrentChatHelp': 'Choose a context setting, leave unset to be prompted when a migrated profile needs one, or save No Context for this chat.',
+    'STMemoryBooks_ContextSettings_Unset': 'Unset - prompt when needed',
+    'STMemoryBooks_ContextSettings_NoContext': 'No Context',
+    'STMemoryBooks_ContextSettings_MissingOption': 'Missing setting: {{key}}',
+    'STMemoryBooks_ContextSettings_ChatSaved': 'Context setting saved for this chat.',
+    'STMemoryBooks_ContextSettings_NoContextSaved': 'No Context saved for this chat.',
+    'STMemoryBooks_ContextSettings_EditTitle': 'Edit Context Setting',
+    'STMemoryBooks_ContextSettings_NewTitle': 'New Context Setting',
+    'STMemoryBooks_ContextSettings_NamePlaceholder': 'Context setting name',
+    'STMemoryBooks_ContextSettings_Saved': 'Context setting saved.',
+    'STMemoryBooks_ContextSettings_Duplicated': 'Context setting duplicated.',
+    'STMemoryBooks_ContextSettings_Deleted': 'Context setting deleted.',
+    'STMemoryBooks_ContextSettings_Imported': 'Context settings imported.',
+    'STMemoryBooks_ContextSettings_ImportFailed': 'Failed to import context settings: {{message}}',
+    'STMemoryBooks_ContextSettings_DeleteTitle': 'Delete Context Setting',
+    'STMemoryBooks_ContextSettings_DeleteConfirm': 'Delete "{{name}}"? Chats referencing this setting will warn and continue without Additional Context.',
+    'STMemoryBooks_ContextSettings_RecoveryTitle': 'Additional Context Available',
+    'STMemoryBooks_ContextSettings_RecoveryBody': 'The selected profile "{{profile}}" has migrated Additional Context. Choose a context setting for this chat, or save No Context.',
+    'STMemoryBooks_ContextSettings_SaveSelected': 'Save selected setting',
+    'STMemoryBooks_ContextSettings_SaveNoContext': 'Save No Context',
+    'STMemoryBooks_ContextSettings_MissingSelectedWarning': 'Selected context setting was not found. Continuing without Additional Context.',
+    'STMemoryBooks_ContextSettings_LegacyProfileWarning': 'Using legacy profile Additional Context for this run. It will be migrated to Context Settings when possible.',
+    'STMemoryBooks_ContextSettings_OpenFailed': 'Failed to open Context Settings',
+    'STMemoryBooks_SidePromptUseAdditionalContext': 'Use additional context',
+    'STMemoryBooks_SidePromptAdditionalContextSource': 'Additional Context Source',
+    'STMemoryBooks_SidePromptAdditionalContextFollowChat': 'Follow chat',
+    'STMemoryBooks_SidePromptAdditionalContextHelp': "Follow chat uses this chat's Additional Context. Choosing a named context setting overrides it for this side prompt.",
     'STMemoryBooks_LorebookEntrySettings': 'Lorebook Entry Settings',
     'STMemoryBooks_LorebookEntrySettingsDesc': 'These settings control how the generated memory is saved into the lorebook.',
+    'STMemoryBooks_ConsolidateArcs_LorebookEntrySettingsDesc': 'These settings control how the generated summary is saved into the lorebook.',
+    'STMemoryBooks_LorebookEntryTitleOverride': 'Lorebook Entry Title Override',
+    'STMemoryBooks_LorebookEntryTitleOverridePlaceholder': 'Optional title template (e.g., NPC {{npcname}})',
+    'STMemoryBooks_LorebookEntryTitleOverrideHelp': 'Optional. Standard ST macros and required runtime macros are resolved here, and STMB still appends (STMB SidePrompt).',
+    'STMemoryBooks_LorebookEntryKeywords': 'Lorebook Entry Keywords',
+    'STMemoryBooks_LorebookEntryKeywordsPlaceholder': 'Optional comma-separated keywords',
+    'STMemoryBooks_LorebookEntryKeywordsHelp': 'Optional. If filled in, these keywords are applied to the upserted lorebook entry. You may only use ST standard macros or macros already defined in Prompt or Response Format.',
+    'STMemoryBooks_LorebookEntryKeywordsTooltip': 'You can only use ST standard macros or macros already defined in Prompt or Response Format.',
+    'STMemoryBooks_SidePromptKeywordsInvalidMacros': 'Lorebook Entry Keywords may only use ST standard macros or macros already defined in Prompt or Response Format: {{macros}}.',
     'STMemoryBooks_OutletName': 'Outlet Name',
     'STMemoryBooks_OutletNamePlaceholder': 'e.g., ENDING',
     'STMemoryBooks_ActivationMode': 'Activation Mode:',
     'STMemoryBooks_ActivationModeDesc': '🔗 Vectorized is recommended for memories.',
+    'STMemoryBooks_ConsolidateArcs_ActivationModeDesc': '🔗 Vectorized is recommended for summaries.',
     'STMemoryBooks_Vectorized': '🔗 Vectorized (Default)',
     'STMemoryBooks_Constant': '🔵 Constant',
     'STMemoryBooks_Normal': '🟢 Normal',
     'STMemoryBooks_InsertionPosition': 'Insertion Position:',
     'STMemoryBooks_InsertionPositionDesc': '↑Char is recommended. Aiko recommends memories never go lower than ↑AN.',
+    'STMemoryBooks_ConsolidateArcs_InsertionPositionDesc': 'Choose where consolidated summaries should be inserted in the lorebook.',
     'STMemoryBooks_CharUp': '↑Char',
     'STMemoryBooks_CharDown': '↓Char',
     'STMemoryBooks_ANUp': '↑AN',
@@ -438,10 +874,12 @@ export const localeData_en = {
     'STMemoryBooks_Outlet': 'Outlet',
     'STMemoryBooks_InsertionOrder': 'Insertion Order:',
     'STMemoryBooks_AutoOrder': 'Auto (uses memory #)',
+    'STMemoryBooks_ReverseOrder': 'Reverse (only use with Outlets)',
     'STMemoryBooks_ManualOrder': 'Manual',
     'STMemoryBooks_RecursionSettings': 'Recursion Settings:',
     'STMemoryBooks_PreventRecursion': 'Prevent Recursion',
     'STMemoryBooks_DelayUntilRecursion': 'Delay Until Recursion',
+    'STMemoryBooks_IgnoreBudget': 'Ignore Budget',
     'STMemoryBooks_RefreshPresets': '🔄 Refresh Presets',
     'STMemoryBooks_Button_CreateMemory': 'Create Memory',
     'STMemoryBooks_Button_AdvancedOptions': 'Advanced Options...',
@@ -479,7 +917,8 @@ export const localeData_en = {
     'STMemoryBooks_Toast_FailedToSaveWave': 'Failed to save SidePrompt updates for this wave',
     'STMemoryBooks_Toast_SidePromptsSucceeded': 'Side Prompts after memory: {{okCount}} succeeded. {{succeeded}}',
     'STMemoryBooks_Toast_SidePromptsPartiallyFailed': 'Side Prompts after memory: {{okCount}} succeeded, {{failCount}} failed. {{failed}}',
-    'STMemoryBooks_Toast_SidePromptNameNotProvided': 'SidePrompt name not provided. Usage: /sideprompt "Name" [X-Y]',
+    'STMemoryBooks_Toast_SidePromptNameNotProvided': 'SidePrompt name not provided. Usage: /sideprompt "Name" {{macro}}="value" [X-Y]',
+    'STMemoryBooks_Toast_SidePromptBlankNotSaved': 'SidePrompt "{{name}}" returned blank content. No changes were saved.',
 
     // Scene Manager
     'STMemoryBooks_Toast_SceneClearedStart': 'Scene cleared due to start marker deletion',
@@ -503,8 +942,13 @@ export const localeData_en = {
     'STMemoryBooks_MessagesDoNotExist': 'One or more specified messages do not exist',
     'STMemoryBooks_SceneSet': 'Scene set.',
     'STMemoryBooks_MemoryAlreadyInProgress': 'Memory creation is already in progress',
+    'STMemoryBooks_CatchupUsage': 'Missing or invalid arguments. Use: /stmb-catchup interval=<chunk size> start=<message id> end=<message id>',
+    'STMemoryBooks_CatchupRequiresChat': 'This command can only be run in an active chat.',
+    'STMemoryBooks_CatchupInvalidInterval': 'Interval must be a positive whole number.',
+    'STMemoryBooks_CatchupRequiresAlwaysUseDefault': '/stmb-catchup is non-interactive. Enable \'Always use default profile\' before running it.',
+    'STMemoryBooks_CatchupRequiresNoPreviews': '/stmb-catchup is non-interactive. Disable memory previews before running it.',
     'STMemoryBooks_NoLorebookAvailable': 'No lorebook available.',
-    'STMemoryBooks_NoMessagesToSummarize': 'There are no messages to summarize yet.',
+    'STMemoryBooks_NoMessagesToSummarize': 'There are no messages to process yet.',
     'STMemoryBooks_NoNewMessagesSinceLastMemory': 'No new messages since the last memory.',
     'STMemoryBooks_NextMemoryFailed': 'Failed to run /nextmemory.',
     'STMemoryBooks_OnlyNOfRequestedMemoriesAvailable': 'Only some of the requested memories are available',
@@ -523,6 +967,12 @@ export const localeData_en = {
     'STMemoryBooks_LoadingCharacterData': 'SillyTavern is still loading character data, please wait a few seconds and try again.',
     'STMemoryBooks_GroupChatDataUnavailable': 'Group chat data not available, please wait a few seconds and try again.',
     'STMemoryBooks_LorebookValidationError': 'Lorebook validation error',
+    'STMemoryBooks_RetryAfterManualLorebookSelection': 'After selecting a lorebook, try again.',
+    'STMemoryBooks_RetryAfterChatLorebookSelection': 'After selecting a lorebook in SillyTavern, try again.',
+    'STMemoryBooks_CreateOrSelectChatLorebookThenRetry': 'Create a replacement lorebook or select an existing one, then try again.',
+    'STMemoryBooks_SelectManualLorebookThenRetry': 'Select an existing lorebook for this chat, then try again.',
+    'STMemoryBooks_SelectChatLorebookThenRetry': 'Select an existing lorebook in SillyTavern, then try again.',
+    'STMemoryBooks_AutoSummaryRetryAfterSelection': 'After selecting a lorebook, try again.',
     'STMemoryBooks_SceneOverlap': 'Scene overlaps with existing memory.',
     'STMemoryBooks_UnexpectedError': 'An unexpected error occurred.',
 
@@ -549,10 +999,12 @@ export const localeData_en = {
     'STMemoryBooks_FailedToOpenSummaryPromptManager': 'Failed to open Summary Prompt Manager',
     'STMemoryBooks_SidePrompts': 'Side Prompts',
     'STMemoryBooks_FailedToOpenSidePrompts': 'Failed to open Side Prompts',
+    'STMemoryBooks_FailedToOpenCompactReview': 'Failed to open Compaction',
     'STMemoryBooks_SelectPresetFirst': 'Select a preset first',
     'STMemoryBooks_NoProfilesAvailable': 'No profiles available',
     'STMemoryBooks_SelectedProfileNotFound': 'Selected profile not found',
     'STMemoryBooks_PresetAppliedToProfile': 'Preset applied to profile',
+    'STMemoryBooks_Prompt_SaveAsNewProfileConfirm': 'Save current settings as new profile "{{name}}"?',
     'STMemoryBooks_PromptCannotBeEmpty': 'Prompt cannot be empty',
     'STMemoryBooks_PresetCreatedSuccessfully': 'Preset created successfully',
     'STMemoryBooks_FailedToCreatePreset': 'Failed to create preset',
@@ -565,7 +1017,11 @@ export const localeData_en = {
     'STMemoryBooks_PromptsImportedSuccessfully': 'Prompts imported successfully',
     'STMemoryBooks_FailedToImportPrompts': 'Failed to import prompts.',
     'STMemoryBooks_CreateMemoryButton': 'Create Memory',
-    'STMemoryBooks_ConsolidateArcsButton': 'Consolidate Memories into Arcs',
+    'STMemoryBooks_ConsolidateArcsButton': 'Consolidate Memories',
+    'STMemoryBooks_ConsolidateArcs_Title': 'Consolidate Memories',
+    'STMemoryBooks_SummaryTier_Label': 'Summary Tier',
+    'STMemoryBooks_ShowConsolidationPreviews': 'Show consolidation previews',
+    'STMemoryBooks_ShowConsolidationPreviewsTooltip': 'Shows previews for consolidation summaries returned from the AI.',
     'STMemoryBooks_NoSceneSelectedMakeSure': 'No scene selected. Make sure both start and end points are set.',
     'STMemoryBooks_ClearSceneButton': 'Clear Scene',
     'STMemoryBooks_FailedToImportProfiles': 'Failed to import profiles',
@@ -585,6 +1041,7 @@ export const localeData_en = {
     'STMemoryBooks_ProfileUpdatedSuccess': 'Profile updated successfully',
     'STMemoryBooks_NewProfileTitle': 'New Profile',
     'STMemoryBooks_ProfileCreatedSuccess': 'Profile created successfully',
+    'STMemoryBooks_ConvertExistingRecursion': 'Also convert recursion settings on existing entries',
     'STMemoryBooks_DeleteProfileConfirm': 'Delete profile "{{name}}"?',
     'STMemoryBooks_CannotDeleteLastProfile': 'Cannot delete the last profile',
     'STMemoryBooks_CannotDeleteDefaultProfile': 'Cannot delete the "Current SillyTavern Settings" profile - it is required for the extension to work',
@@ -611,20 +1068,24 @@ export const localeData_en = {
     'STMemoryBooks_Toast_InvalidRangeFormat': 'Invalid range format. Use X-Y',
     'STMemoryBooks_Toast_InvalidMessageRange': 'Invalid message range for /sideprompt',
     'STMemoryBooks_Toast_FailedToCompileRange': 'Failed to compile the specified range',
-    'STMemoryBooks_Toast_SidePromptRangeTip': 'Tip: You can run a specific range with /sideprompt "Name" X-Y (e.g., /sideprompt "Scoreboard" 100-120). Running without a range uses messages since the last checkpoint.',
+    'STMemoryBooks_Toast_SidePromptRangeTip': 'Tip: You can run a specific range with /sideprompt "Name" {{macro}}="value" X-Y (e.g., /sideprompt "Scoreboard" 100-120). Running without a range uses messages since the last checkpoint.',
+    'STMemoryBooks_RuntimeMacroManualOnlyPrefix': 'is not a standard ST macro. This side prompt must be run manually with the command',
+    'STMemoryBooks_RuntimeMacroManualOnlyPrefixPlural': 'are not standard ST macros. This side prompt must be run manually with the command',
+    'STMemoryBooks_RuntimeMacroTriggersStripped': 'Stripped {{triggers}} from "{{name}}" because it contains custom runtime macros: {{macros}}. Run it manually with {{usage}}.',
+    'STMemoryBooks_RuntimeMacroPleaseUncheck': 'Please uncheck',
     'STMemoryBooks_Toast_FailedToCompileMessages': 'Failed to compile messages for /sideprompt',
 	'STMemoryBooks_Plotpoints': 'Plotpoints',
     'STMemoryBooks_PlotpointsPrompt': "Analyze the accompanying scene for plot threads, story arcs, and other narrative movements. The previous scenes are there to provide context. Generate a story thread report. If a report already exists in context, update it instead of recreating.",
     'STMemoryBooks_Status': 'Status',
     'STMemoryBooks_StatusPrompt': "Analyze all context (previous scenes, memories, lore, history, interactions) to generate a detailed analysis of {{user}} and {{char}} (including abbreviated !lovefactor and !lustfactor commands). Note: If there is a pre-existing !status report, update it, do not regurgitate it.",
     'STMemoryBooks_CastOfCharacters': 'Cast of Characters',
-    'STMemoryBooks_CastOfCharactersPrompt': "You are a skilled reporter with a clear eye for judging the importance of NPCs to the plot. \nStep 1: Review the scene and either add or update plot-related NPCs to the NPC WHO'S WHO report. Please note that {{char}} and {{user}} are major characters and do NOT need to be included in this report.\nStep 2: This list should be kept in order of importance to the plot, so it may need to be reordered.\nStep 3: If your response would be more than 2000 tokens long, remove NPCs with the least impact to the plot.",
+    'STMemoryBooks_CastOfCharactersPrompt': "You are a skilled reporter with a clear eye for judging the importance of NPCs to the plot.\nStep 1: Review the scene and either add or update plot-related NPCs to the NPC WHO'S WHO report. Please note that {{char}} and {{user}} are major characters and do NOT need to be included in this report.\nStep 2: This list should be kept in order of importance to the plot, so it may need to be reordered.\nStep 3: If your response would be more than 2000 tokens long, remove NPCs with the least impact to the plot.",
     'STMemoryBooks_Assess': 'Assess',
     'STMemoryBooks_AssessPrompt': "Assess the interaction between {{char}} and {{user}} to date. List all the information {{char}} has learned about {{user}} in a code block through observation, questioning, or drawing conclusions from interaction (similar to a mental \"note to self\"). If there is already a list, update it. Try to keep it token-efficient and compact, focused on the important things.",
     'STMemoryBooks_PlotpointsResponseFormat': "=== Plot Points ===\n(as of [point in the story when this analysis was done])\n\n[Overarching Plot Arc]\n(2-3 sentence summary of the superobjective or major plot)\n\n[Thread #1 Title]\n- Summary: (1 sentence)\n- Status: (active / on hold)\n- At Stake: (how resolution will affect the ongoing story)\n- Last Known: (location or time)\n- Key Characters: ...\n\n\n[Thread #2 Title]\n- Summary: (1 sentence)\n- Status: (active / on hold)\n- At Stake: (how resolution will affect the ongoing story)\n- Last Known: (location or time)\n- Key Characters: ...\n\n...\n\n-- Plot Hooks --\n- (new or potential plot hooks)\n\n-- Character Dynamics --\n- current status of {{user}}'s/{{char}}'s relationships with NPCs\n\n===End Plot Points===\n",
     'STMemoryBooks_StatusResponseFormat': "Follow this general format:\n\n## Witty Headline or Summary\n\n### AFFINITY (0-100, have some relationship with !lovefactor and !lustfactor)\n- Score with evidence\n- Recent changes \n- Supporting quotes\n- Anything else that might be illustrative of the current affinity\n\n### LOVEFACTOR and LUSTFACTOR\n(!lovefactor and !lustfactor reports go here)\n\n### RELATIONSHIP STATUS (negative = enemies, 0 = strangers, 100 = life partners)\n- Trust/boundaries/communication\n- Key events\n- Issues\n- Any other pertinent points\n\n### GOALS\n- Short/long-term objectives\n- Progress/obstacles\n- Growth areas\n- Any other pertinent points\n\n### ANALYSIS\n- Psychology/POV\n- Development/triggers\n- Story suggestions\n- Any other pertinent points\n\n### WRAP-UP\n- OOC Summary (1 paragraph)",
     'STMemoryBooks_CastOfCharactersResponseFormat': "===NPC WHO'S WHO===\n(In order of importance to the plot)\n\nPerson 1: 1-2 sentence desription\nPerson 2: 1-2 sentence desription\n===END NPC WHO'S WHO===",
-    'STMemoryBooks_AssessResponseFormat': "Use this format: \n=== Things {{char}} has learned about {{user}} ===\n(detailed list, in {{char}}'s POV/tone of voice)\n===",
+    'STMemoryBooks_AssessResponseFormat': "Use this format:\n=== Things {{char}} has learned about {{user}} ===\n(detailed list, in {{char}}'s POV/tone of voice)\n===",
     'STMemoryBooks_FailedToSaveSidePrompts': 'Failed to save side prompts: {{status}} {{statusText}}',
     'STMemoryBooks_SidePromptsSaved': 'Side prompts saved successfully',
     'STMemoryBooks_MigratingSidePrompts': 'Migrating side prompts file from V1(type) to V2(triggers)',
@@ -658,6 +1119,7 @@ export const localeData_en = {
     'addlore.toast.added': 'Memory "{{entryTitle}}" added to "{{lorebookName}}"',
     'addlore.toast.addFailed': 'Failed to add memory: {{message}}',
     'addlore.toast.autohideInvalidRange': 'Auto-hide skipped: invalid scene range metadata',
+    'addlore.toast.orderClamped': 'Order range is limited to 0–9999. Current {{source}} is {{requested}}; clamped to {{clamped}}.',
     'addlore.toast.title': 'STMemoryBooks',
     'addlore.result.added': 'Memory successfully added to "{{lorebookName}}"',
     'addlore.result.addFailed': 'Failed to add memory to lorebook: {{message}}',
@@ -687,7 +1149,9 @@ export const localeData_en = {
     'addlore.titleFormats.7': '[000] - {{title}} ({{scene}})',
     'addlore.titleFormats.8': '[000] - {{title}}',
     'addlore.log.executingHideCommand': 'STMemoryBooks-AddLore: Executing hide command{{context}}: {{hideCommand}}',
+    'addlore.warn.autohideFailed': 'STMemoryBooks-AddLore: Auto-hide failed:',
     'addlore.warn.autohideSkippedInvalidRange': 'STMemoryBooks-AddLore: Auto-hide skipped - invalid scene range: "{{range}}"',
+    'addlore.warn.refreshEditorFailed': 'STMemoryBooks-AddLore: reloadEditor failed:',
     'addlore.hideCommand.allComplete': 'all mode - complete',
     'addlore.hideCommand.allPartial': 'all mode - partial',
     'addlore.hideCommand.lastHideAll': 'last mode - hide all',
@@ -729,288 +1193,487 @@ export const localeData_en = {
     'common.unknown': 'Unknown',
     
     // Arcs
-    'STMemoryBooks_ArcPromptManager': 'Arc Prompt Manager',
+    'STMemoryBooks_ArcPromptManager': 'Consolidation Prompt Manager',
+    'STMemoryBooks_ArcPromptManager_Title': '🧱 Consolidation Prompt Manager',
+    'STMemoryBooks_ArcPromptManager_Desc': 'Manage your Consolidation Analysis prompts. All presets are editable.',
+    'STMemoryBooks_ArcPromptManager_Search': 'Search consolidation presets...',
+    'STMemoryBooks_ArcPromptManager_New': '➕ New Consolidation Preset',
+    'STMemoryBooks_ArcPromptManager_Export': '📤 Export JSON',
+    'STMemoryBooks_ArcPromptManager_Import': '📥 Import JSON',
+    'STMemoryBooks_ArcPromptManager_RecreateBuiltins': '♻️ Recreate Built-in Consolidation Prompts',
+    'STMemoryBooks_ArcPromptManager_SetDefault': 'Set Default',
+    'STMemoryBooks_ArcPromptManager_DefaultSaved': '"{{name}}" is now the default consolidation prompt.',
+    'STMemoryBooks_ArcPromptManager_DefaultSaveFailed': 'Failed to set default consolidation prompt',
+    'STMemoryBooks_ArcPrompt_DisplayName_Default': 'Multi-Consolidation Analysis',
+    'STMemoryBooks_ArcPrompt_DisplayName_Alternate': 'Single Consolidation Analysis',
+    'STMemoryBooks_ArcPrompt_DisplayName_Tiny': 'Tiny Consolidation Analysis',
+    'STMemoryBooks_ArcPrompt_DisplayName_Regenerate': 'Regenerate Consolidation',
+    'STMemoryBooks_ArcPromptManager_RegenerationOnlyNote': 'Regeneration only. Cannot be used for ordinary consolidation or set as the default.',
     'STMemoryBooks_Arc_RebuildBuiltins': 'Rebuild from built-ins',
-    'STMemoryBooks_Arc_MaxPerPass': 'Maximum number of memories to process in each pass',
-    'STMemoryBooks_Arc_MaxPasses': 'Number of automatic arc attempts',
-    'STMemoryBooks_Arc_MinAssigned': 'Minimum number of memories in each arc',
+    'STMemoryBooks_Arc_MaxPerPass': 'Maximum number of {{stmbchildtier}} entries to process in each pass',
+    'STMemoryBooks_Arc_MaxPasses': 'Number of automatic summary attempts',
+    'STMemoryBooks_Arc_MinAssigned': 'Saved minimum eligible {{stmbchildtier}} needed before {{stmbtier}} is ready',
+    'STMemoryBooks_Arc_MinAssignedNote': 'Also used for auto-consolidation readiness for this tier.',
     'STMemoryBooks_Arc_TokenBudget': 'Token Budget',
-    'STMemoryBooks_Arc_RebuildTitle': 'Rebuild Arc Prompts from Built-ins',
-    'STMemoryBooks_Arc_RebuildWarning': 'This will overwrite your saved Arc prompt presets with the built-ins. A timestamped backup will be created.',
+    'STMemoryBooks_Arc_Order_Label': 'Summary entry order',
+    'STMemoryBooks_Arc_Order_Help': "Controls the lorebook 'order' for newly created summaries only.",
+    'STMemoryBooks_Arc_AutoOrder': 'Auto (uses summary #)',
+    'STMemoryBooks_Arc_RebuildTitle': 'Rebuild Consolidation Prompts from Built-ins',
+    'STMemoryBooks_Arc_RebuildWarning': 'This will overwrite your saved Consolidation prompt presets with the built-ins. A timestamped backup will be created.',
     'STMemoryBooks_Arc_RebuildNote': 'After rebuild, the preset list will refresh automatically.',
-    'STMemoryBooks_ConsolidateArcs_DisableOriginals': 'Disable originals after creating arcs',
-    'STMemoryBooks_ConsolidateArcs_Tip': 'Tip: uncheck memories that should not be included.',
+    'STMemoryBooks_ConsolidateArcs_DisableOriginals': 'Disable selected source entries after creating summaries',
+    'STMemoryBooks_ConsolidateArcs_Tip': 'Tip: uncheck entries that should not be included.',
+    'STMemoryBooks_ConsolidationPreview_Title': 'Consolidation Preview',
+    'STMemoryBooks_ConsolidationPreview_Desc': 'Review generated summaries before saving. You can edit title, summary, and keywords.',
+    'STMemoryBooks_ConsolidationPreview_AmbiguousAssignments': 'Multiple consolidations returned more than one summary, but memory assignments were not clearly stated, so it is unknown which memories belong to which summary. Individual summary edit/accept is not available; the entire batch must be approved or rejected for regeneration.',
+    'STMemoryBooks_ConsolidationPreview_BankedCount': 'Already accepted summaries',
+    'STMemoryBooks_ConsolidationPreview_AcceptSummary': 'Accept this summary',
+    'STMemoryBooks_ConsolidationPreview_RegenerateSummary': 'Regenerate consolidation with the same memories',
+    'STMemoryBooks_ConsolidationPreview_SummaryTitle': 'Summary Title:',
+    'STMemoryBooks_ConsolidationPreview_TitlePlaceholder': 'Summary title',
+    'STMemoryBooks_ConsolidationPreview_SummaryContent': 'Summary Content:',
+    'STMemoryBooks_ConsolidationPreview_ContentPlaceholder': 'Summary content',
+    'STMemoryBooks_ConsolidationPreview_AssignedMemories': 'Assigned source memories',
+    'STMemoryBooks_ConsolidationPreview_NoAssignedMemories': 'No assigned source memories found.',
+    'STMemoryBooks_ConsolidationPreview_PendingCount': 'Pending source memories after this round',
+    'STMemoryBooks_ConsolidationPreview_SaveEntireBatch': 'Save Entire Batch',
+    'STMemoryBooks_ConsolidationPreview_ApplySelections': 'Finish Review and Save',
+    'STMemoryBooks_ConsolidationPreview_RegenerateBatch': 'Regenerate Batch',
+    'STMemoryBooks_ConsolidationPreview_TitleRequired': 'Summary title cannot be empty',
+    'STMemoryBooks_ConsolidationPreview_ContentRequired': 'Summary content cannot be empty',
     'STMemoryBooks_ArcAnalysis_EmptyResponse': 'Empty AI response',
     'STMemoryBooks_ArcAnalysis_InvalidJSON': 'Model did not return valid arc JSON',
     'STMemoryBooks_ArcAnalysis_MissingLorebookData': 'Missing lorebookName or lorebookData',
+    'STMemoryBooks_ArcAnalysis_NoUsableArcs': 'No usable summaries were produced from the model response.',
     'STMemoryBooks_ArcAnalysis_UpsertFailed': 'Arc upsert returned no entry (commitArcs failed)',
-    'STMemoryBooks_ArcPromptManager_SaveFailed': 'Failed to save arc prompts',
+    'STMemoryBooks_ArcPromptManager_SaveFailed': 'Failed to save consolidation prompts',
+    'STMemoryBooks_ReviewFailedArc_Title': 'Review Failed Summary Response',
+    'STMemoryBooks_ReviewFailedArc_CreateArcs': 'Create summaries from corrected JSON',
+    'STMemoryBooks_ReviewFailedArc_FieldsDesc': 'Use Extract to populate fields from the raw response, then Fill JSON to generate valid summary JSON.',
+    'STMemoryBooks_ReviewFailedArc_TitleSummaryRequired': 'Title and Summary are required to build a summary.',
 
-    // Arc Prompts
-    // Default Arc Prompt
-    'STMemoryBooks_ArcPrompt_Default':`You are an expert narrative analyst and memory-engine assistant.
-Your task is to take multiple scene summaries (of varying detail and formatting), normalize them, reconstruct the full chronology, identify self-contained story arcs, and output each arc as a single memory entry in JSON.
+    // Summary Prompts
+    'STMemoryBooks_SummaryPrompt_Default': `You are an expert narrative analyst and memory-engine assistant.
+Your task is to combine multiple {{stmbchildtier}} entries into one or more coherent {{stmbtier}} summaries.
 
-Each arc must be token-efficient, plot-accurate, and compatible with long-running RP memory systems such as STMB.
-
-You will receive input in this exact format:
-- An optional PREVIOUS ARC block, which is canon and must not be rewritten.
-- A MEMORIES block containing entries formatted as:
-  [ID] | ORDER
-  Full text of the memory (may span multiple paragraphs)
-
-Strict output format (JSON only; no markdown, no prose outside JSON):
-{
-  "arcs": [
-    {
-      "title": "Short descriptive arc title (3–6 words)",
-      "summary": "Structured arc summary as a single string (see Summary Content Structure below).",
-      "keywords": ["keyword1", "keyword2", "..."],
-      "member_ids": ["<ID from MEMORIES>", "..."]  // optional: IDs of memories that belong to this arc
-    }
-  ],
-  "unassigned_memories": [
-    { "id": "memory-id", "reason": "Brief explanation of why this memory does not fit the produced arcs." }
-  ]
-}
-
-Arc count rule:
-- Do not force a number of arcs. Produce the smallest coherent number of arcs based on content (often 1–3, possibly 1 if all memories form one arc).
-- Respect chronology using ORDER (ascending).
-- If some memories do not fit the produced arcs, place them in unassigned_memories with a short reason.
-
-Do not repeat text from PREVIOUS ARC. Treat it as canon; continue consequences only if relevant in the new memories.
-
-PROCESS
-
-STEP 1 — UNIFIED STORY (internal only)
-- Combine ALL memories into a single chronological retelling.
-- Ignore OOC/meta content.
-- Preserve plot-relevant events, character choices, emotional shifts, decisions, consequences, conflicts, promises, boundary negotiations.
-- Exclude flavor-only content unless it affects future behavior.
-- Normalize to past-tense, third-person.
-- Focus on cause → intention → reaction → consequence chains.
-- Do NOT output this unified story.
-
-STEP 2 — IDENTIFY STORY ARCS
-- From the unified story, extract arcs that begin when a meaningful shift occurs in:
-  relationship dynamics; emotional vulnerability; intimacy or distance; conflict/reconciliation; routine/ritual changes; boundaries/negotiations; logistical shifts (travel, location, communication); any event with lasting consequences.
-- Ensure each arc is self-contained and represents a significant movement.
-
-STEP 3 — ARC OBJECTS (fill arcs[] in JSON)
-For each arc, fill fields as follows:
-
-title:
-- 3–6 words, descriptive of the arc’s core.
-
-summary:
-- The entire “Summary Content Structure” below must appear inside this single string (use headings and bullets as plain text).
-- Keep total length 5–15% of the combined text for the arc’s memories.
-- Do not include OOC/meta or filler.
-
-Summary Content Structure (must be followed inside summary string):
-
-# [Arc Title]
-Time period: What timeframe the arc covers (e.g. "March 3–10, 2024", "Week of July 15, 2023")
-
-Arc Premise: One sentence describing what this arc is about.
-
-## Major Beats
-- 3–7 bullets capturing the major plot movements of this arc
-- Focus on cause → effect logic
-- Include only plot-affecting events
-
-## Character Dynamics
-- 1–2 paragraphs describing how the characters’ emotions, motives, boundaries, or relationship changed
-- Include subtext, tension shifts, power exchange changes, new trust/vulnerabilities, or new conflicts
-- Include silent implications if relevant
-
-## Key Exchanges
-- Up to 8 short, exact quotes
-- Only include dialogue that materially shifted tone, emotion, or relationship dynamics
-
-## Outcome & Continuity
-- 4–8 bullets capturing:
-  - decisions
-  - promises
-  - new emotional states
-  - new routines/rituals
-  - injuries or physical changes
-  - foreshadowed future events
-  - unresolved threads
-  - permanent consequences
-
-STEP 4 — KEYWORDS
-- Provide 15–30 standalone retrieval keywords in keywords[] per arc.
-
-MUST:
-- Concrete nouns, physical objects, places, proper nouns, distinctive actions, or memorable scene elements
-- Each keyword = ONE concept only
-- Each keyword must be retrievable if mentioned ALONE
-- Use ONLY nouns or noun-phrases
-
-MUST NOT:
-- No narrative/summary keywords (“start of affair”, “argument resolved”)
-- No emotional/abstract words (intimacy, vulnerability, trust, jealousy, dominance, submission, aftercare, connection, longing, etc.)
-- No multi-fact keywords (“Denver airport Lyft ride and call”)
-- No themes or vibes
-
-Examples of valid keywords:
-- Four Seasons bar
-- Macallan 25
-- private elevator
-- Aston Martin
-- CPAP machine
-- Gramercy Tavern
-- yuzu soda
-- satellite map
-- Life360 app
-- marble desk
-- “pack for forever”
-- “dick-measuring contest”
-
-Classification of non-fitting memories:
-- If a memory obviously belongs to a later arc, is unrelated, flavor-only with no continuity impact, duplicates, or conflicts with PREVIOUS ARC chronology, put it in unassigned_memories with a short reason.
-
-JSON-only:
-- Return only the JSON object described above.
-- No markdown fences, no commentary, no system prompts, no extra text.`,
-
-    // Alternate Arc Prompt
-    'STMemoryBooks_ArcPrompt_Alternate':`You are an expert narrative analyst and memory-engine assistant.
-Your task is to take multiple scene summaries (of varying detail and formatting), normalize them, reconstruct the full chronology, and output a single memory arc entry in JSON. The arc must be token-efficient and plot-accurate.
-
-You will receive input in this exact format:
-- An optional PREVIOUS ARC block, which is canon and must not be rewritten.
-- A MEMORIES block containing entries formatted as:
-  [ID] | ORDER
-  Full text of the memory (may span multiple paragraphs)
-
-Strict output format (JSON only; no markdown, no prose outside JSON):
-{
-  "arcs": [
-    {
-      "title": "Short descriptive arc title (3–6 words)",
-      "summary": "Structured arc summary as a single string (see Summary Content Structure below).",
-      "keywords": ["keyword1", "keyword2", "..."],
-      "member_ids": ["<ID from MEMORIES>", "..."]  // optional: IDs of memories that belong to this arc
-    }
-  ],
-  "unassigned_memories": [
-    { "id": "memory-id", "reason": "Brief explanation of why this memory does not fit the produced arcs." }
-  ]
-}
-
-Notes:
-- Respect chronology using ORDER (ascending).
-- If some memories do not fit the arc, place them in unassigned_memories with a short reason.
-
-Do not repeat text from PREVIOUS ARC. Treat it as canon; continue consequences only if relevant in the new memories.
-
-PROCESS
-
-STEP 1 — UNIFIED STORY (internal only)
-- Combine ALL memories into a single chronological retelling.
-- Ignore OOC/meta content.
-- Preserve plot-relevant events, character choices, emotional shifts, decisions, consequences, conflicts, promises, boundary negotiations.
-- Exclude flavor-only content unless it affects future behavior.
-- Normalize to past-tense, third-person.
-- Focus on cause → intention → reaction → consequence chains.
-- Do NOT output this unified story.
-
-STEP 2 — IDENTIFY STORY ARCS
-- From the unified story, identify a self-contained arc that represents a significant narrative movement.
-
-STEP 3 — ARC OBJECTS (fill arcs[] in JSON)
-For the story arc, fill fields as follows:
-
-title:
-- 3–6 words, descriptive of the arc’s core.
-
-summary:
-- The entire "Summary Content Structure" below must appear inside this single string (use headings and bullets as plain text).
-- Keep total length 5–15% of the combined text for the arc’s memories.
-- Do not include OOC/meta or filler.
-
-Summary Content Structure (must be followed inside summary string):
-
-# [Arc Title]
-Time period: What timeframe the arc covers (e.g. "March 3–10, 2024", "Week of July 15, 2023")
-
-Arc Premise: One sentence describing what this arc is about.
-
-## Major Beats
-- 3–7 bullets capturing the major plot movements of this arc
-- Focus on cause → effect logic
-- Include only plot-affecting events
-
-## Character Dynamics
-- 1–2 paragraphs describing how the characters’ emotions, motives, boundaries, or relationship changed
-- Include subtext, tension shifts, power exchange changes, new trust/vulnerabilities, or new conflicts
-- Include silent implications if relevant
-
-## Key Exchanges
-- Up to 8 short, exact quotes
-- Only include dialogue that materially shifted tone, emotion, or relationship dynamics
-
-## Outcome & Continuity
-- 4–8 bullets capturing:
-  - decisions
-  - promises
-  - new emotional states
-  - new routines/rituals
-  - injuries or physical changes
-  - foreshadowed future events
-  - unresolved threads
-  - permanent consequences
-
-STEP 4 — KEYWORDS
-- Provide 15–30 standalone retrieval keywords in keywords[] per arc.
-
-MUST:
-- Concrete nouns, physical objects, places, proper nouns, distinctive actions, or memorable scene elements
-- Each keyword = ONE concept only
-- Each keyword must be retrievable if mentioned ALONE
-- Use ONLY nouns or noun-phrases
-
-MUST NOT:
-- No narrative/summary keywords (“start of affair”, “argument resolved”)
-- No emotional/abstract words (intimacy, vulnerability, trust, jealousy, dominance, submission, aftercare, connection, longing, etc.)
-- No multi-fact keywords (“Denver airport Lyft ride and call”)
-- No themes or vibes
-
-Examples of valid keywords:
-- Four Seasons bar
-- Macallan 25
-- private elevator
-- Aston Martin
-- CPAP machine
-- Gramercy Tavern
-- yuzu soda
-- satellite map
-- Life360 app
-- marble desk
-- “pack for forever”
-- “dick-measuring contest”
-
-Classification of non-fitting memories:
-- If a memory obviously belongs to a later arc, is unrelated, flavor-only with no continuity impact, duplicates, or conflicts with PREVIOUS ARC chronology, put it in unassigned_memories with a short reason.
-
-JSON-only:
-- Return only the JSON object described above.
-- No markdown fences, no commentary, no system prompts, no extra text.`,
-
-    // Tiny Arc Prompt
-    'STMemoryBooks_ArcPrompt_Tiny': `You specialize in compressing many small memories into compact, coherent story arcs. Combine the memories below — and the previous arc if provided — into a single arc that captures the main narrative through-lines.
+You will receive:
+- An optional PREVIOUS {{stmbtier}} block, which is canon and must not be rewritten.
+- A block of {{stmbchildtier}} entries in chronological order.
 
 Return JSON only:
-{ "arcs": [ { "title": "...", "summary": "...", "keywords": ["..."], "member_ids": ["<ID>", "..."] } ], "unassigned_memories": [ { "id": "...", "reason": "..." } ] }
+{
+  "summaries": [
+    {
+      "title": "Short descriptive {{stmbtier}} title (3-6 words)",
+      "summary": "Structured {{stmbtier}} summary as a single string.",
+      "keywords": ["keyword1", "keyword2"],
+      "member_ids": ["<ID>", "..."]
+    }
+  ],
+  "unassigned_items": [
+    { "id": "item-id", "reason": "Why this item does not fit the produced summaries." }
+  ]
+}
 
 Rules:
-- 5–15% length compression
-- Focus on plot, emotional progression, decisions, conflicts, continuity
-- Identify non-fitting items in unassigned_memories with a brief reason
-- No quotes, no OOC, no commentary outside JSON`,
+- Respect chronology.
+- Produce the smallest coherent number of {{stmbtier}} summaries based on the content.
+- If an item does not fit, place it in unassigned_items with a short reason.
+- Do not repeat the PREVIOUS {{stmbtier}} text verbatim.
+
+Each summary must:
+- Very clearly trace cause-effect in order to make the plot and continuity understandable.
+- Be token-efficient and plot-accurate.
+- Preserve important changes, decisions, conflicts, consequences, and continuity.
+- Ignore OOC and flavor-only detail unless it affects future continuity.
+- Use the structure below inside the summary string:
+
+# [{{stmbtier}} Title]
+Time period: ...
+
+{{stmbtier}} Premise: One sentence describing what this {{stmbtier}} is about.
+
+## Major Beats
+- 3-7 bullets focused on plot-changing events
+
+## Character Dynamics
+- 1-2 short paragraphs on relationship, emotional, or motive changes
+
+## Key Exchanges
+- Up to 8 short exact quotes only if materially important
+
+## Outcome & Continuity
+- 4-8 bullets covering decisions, promises, unresolved threads, permanent consequences, and foreshadowed next steps
+
+The \`summary\` field must use this structure:
+
+# [Scene Title]
+
+**Timeline**: [Most specific date and time supported by the source entries; if unspecified, state unspecified or use relative time.]
+
+## Story Beats
+
+* Present the major actions, revelations, decisions, and emotional or magical shifts in chronological order.
+* Explain what triggered each development, why characters acted, how others reacted, and what resulted.
+* Include plot-affecting interactions, meaningful shared experiences, and events that changed relationships or future continuity.
+* Omit repeated gestures, room dressing, background objects, and logistical detail unless they directly affected events.
+
+## Character Dynamics
+
+* Explain how motives, emotions, relationships, and power dynamics changed during the summarized period.
+* Capture consequential subtext, tension, vulnerability, trust, conflict, avoidance, affection, resentment, or loyalty.
+* Include small or domestic experiences only when they meaningfully shaped relationship history.
+* Do not repeat plot events unless needed to explain the interpersonal change they caused.
+
+## Important Facts
+
+* Record newly established facts likely to matter later, including plans, risks, abilities, limitations, preferences, promises, secrets, debts, injuries, magical effects, discoveries, and obligations.
+* Exclude casual preferences, scenery, errands, paperwork, clothing, furniture, weather, and other incidental details unless they became continuity-relevant.
+
+## Key Exchanges
+
+* Include only dialogue that defined a revelation, decision, conflict, emotional shift, or relationship change.
+* Attribute each quotation by speaker name.
+* Include a direct quotation only when the source entries preserve its exact wording. Never reconstruct quoted dialogue from a paraphrase.
+* Preserve distinctive phrases or identifiers, such as “pack for forever” or “dick-measuring contest,” only when they are memorable or relationship-relevant.
+* Include no more than 8 quotations.
+
+## Outcome & Continuity
+
+* State the final narrative, emotional, relational, physical, or magical condition produced by the events.
+* Record resulting decisions, plans, risks, promises, secrets, injuries, knowledge, and obligations that affect what happens next.
+* Identify unresolved threads, pending conflicts, future consequences, and foreshadowed developments.
+* Do not recap the full sequence of events again.
+
+For the \`keywords\` field:
+
+Generate **12–20 natural retrieval keywords when the material supports them**. Use fewer rather than padding the list with weak terms. Keywords are search hooks, not miniature summaries or evidence notes.
+
+Prioritize:
+
+1. **Stable named entities**: people other than {{char}} or {{user}}, places, organizations, events, documents, factions, spells, or distinctive objects.
+2. **Major continuity anchors**: plans, threats, secrets, discoveries, investigations, conflicts, injuries, promises, relationship changes, and unresolved threads.
+3. **Memorable moments**: meaningful shared activities, gifts, food, rituals, jokes, care-taking, arguments, or domestic events.
+4. **Independent secondary hooks** that retrieve a separate part of the summarized material.
+
+### Keyword construction
+
+Use the shortest distinctive wording likely to remain recognizable under paraphrasing or reversed word order.
+
+Examples:
+
+* \`Gala of the Silver Rose\` or \`Silver Rose Gala\` → \`Silver Rose\`
+* \`Bromet Response SA\` → \`Bromet\`
+* \`Château D’Aramitz\`, Comte D’Aramitz, or a plan involving him → \`D’Aramitz\`
+* Keep \`Althof Ledger\` when both words are required to identify the object.
+
+Prefer one central named entity when it already covers several related events:
+
+* \`D’Aramitz rescue plan\` → \`D’Aramitz\`
+* \`Bromet hidden contractors\` → \`Bromet\`
+* \`Althof Ledger substitution\` → \`Althof Ledger\`
+
+Retain a modified phrase only when it provides an independent retrieval route not covered by the central entity:
+
+* \`fake caterers\`
+* \`ledger facsimile\`
+* \`safehouse breakfast\`
+* \`counter-surveillance camera\`
+
+When several clues establish one conclusion, usually tag the resulting finding rather than each supporting clue:
+
+* Uniforms, badges, and vehicle access → \`fake caterers\`
+* Payments and company records → \`Bromet\`
+* A covert tactical team at the gala → \`suspected assassination\`
+* A rental used for equipment and disguises → \`staging villa\`
+
+A supporting clue may remain only when it is memorable, likely to recur, or independently useful for retrieval.
+
+Keywords should normally:
+
+* Contain 1–4 words.
+* Use ordinary noun phrases.
+* Identify genuinely distinct parts of the summary.
+* Remain stable if later descriptions use different wording.
+
+Exclude:
+
+* Incidental scenery or props.
+* Exact times, quantities, card digits, invoice wording, or administrative details.
+* Generic themes such as \`danger\`, \`romance\`, or \`conversation\`.
+* Unsupported conclusions.
+* Sentence-like evidence descriptions.
+* Multiple keywords that merely restate or narrow the same named entity.
+
+Before returning the JSON, silently verify that each keyword is natural to search, continuity-relevant, stable under paraphrasing, independently useful, and no longer than necessary.`,
+
+    'STMemoryBooks_SummaryPrompt_Alternate': `You are an expert narrative analyst and memory-engine assistant.
+Your task is to combine multiple {{stmbchildtier}} entries into a single coherent {{stmbtier}} summary.
+
+Return JSON only:
+{
+  "summaries": [
+    {
+      "title": "Short descriptive {{stmbtier}} title",
+      "summary": "Structured {{stmbtier}} summary",
+      "keywords": ["keyword1", "keyword2"],
+      "member_ids": ["<ID>", "..."]
+    }
+  ],
+  "unassigned_items": [
+    { "id": "item-id", "reason": "Why this item does not fit." }
+  ]
+}
+
+The \`summary\` field must use this structure:
+
+# [Scene Title]
+
+**Timeline**: [Most specific date and time supported by the source entries; if unspecified, state unspecified or use relative time.]
+
+## Story Beats
+
+* Present the major actions, revelations, decisions, and emotional or magical shifts in chronological order.
+* Explain what triggered each development, why characters acted, how others reacted, and what resulted.
+* Include plot-affecting interactions, meaningful shared experiences, and events that changed relationships or future continuity.
+* Omit repeated gestures, room dressing, background objects, and logistical detail unless they directly affected events.
+
+## Character Dynamics
+
+* Explain how motives, emotions, relationships, and power dynamics changed during the summarized period.
+* Capture consequential subtext, tension, vulnerability, trust, conflict, avoidance, affection, resentment, or loyalty.
+* Include small or domestic experiences only when they meaningfully shaped relationship history.
+* Do not repeat plot events unless needed to explain the interpersonal change they caused.
+
+## Important Facts
+
+* Record newly established facts likely to matter later, including plans, risks, abilities, limitations, preferences, promises, secrets, debts, injuries, magical effects, discoveries, and obligations.
+* Exclude casual preferences, scenery, errands, paperwork, clothing, furniture, weather, and other incidental details unless they became continuity-relevant.
+
+## Key Exchanges
+
+* Include only dialogue that defined a revelation, decision, conflict, emotional shift, or relationship change.
+* Attribute each quotation by speaker name.
+* Include a direct quotation only when the source entries preserve its exact wording. Never reconstruct quoted dialogue from a paraphrase.
+* Preserve distinctive phrases or identifiers, such as “pack for forever” or “dick-measuring contest,” only when they are memorable or relationship-relevant.
+* Include no more than 8 quotations.
+
+## Outcome & Continuity
+
+* State the final narrative, emotional, relational, physical, or magical condition produced by the events.
+* Record resulting decisions, plans, risks, promises, secrets, injuries, knowledge, and obligations that affect what happens next.
+* Identify unresolved threads, pending conflicts, future consequences, and foreshadowed developments.
+* Do not recap the full sequence of events again.
+
+For the \`keywords\` field:
+
+Generate **12–20 natural retrieval keywords when the material supports them**. Use fewer rather than padding the list with weak terms. Keywords are search hooks, not miniature summaries or evidence notes.
+
+Prioritize:
+
+1. **Stable named entities**: people other than {{char}} or {{user}}, places, organizations, events, documents, factions, spells, or distinctive objects.
+2. **Major continuity anchors**: plans, threats, secrets, discoveries, investigations, conflicts, injuries, promises, relationship changes, and unresolved threads.
+3. **Memorable moments**: meaningful shared activities, gifts, food, rituals, jokes, care-taking, arguments, or domestic events.
+4. **Independent secondary hooks** that retrieve a separate part of the summarized material.
+
+### Keyword construction
+
+Use the shortest distinctive wording likely to remain recognizable under paraphrasing or reversed word order.
+
+Examples:
+
+* \`Gala of the Silver Rose\` or \`Silver Rose Gala\` → \`Silver Rose\`
+* \`Bromet Response SA\` → \`Bromet\`
+* \`Château D’Aramitz\`, Comte D’Aramitz, or a plan involving him → \`D’Aramitz\`
+* Keep \`Althof Ledger\` when both words are required to identify the object.
+
+Prefer one central named entity when it already covers several related events:
+
+* \`D’Aramitz rescue plan\` → \`D’Aramitz\`
+* \`Bromet hidden contractors\` → \`Bromet\`
+* \`Althof Ledger substitution\` → \`Althof Ledger\`
+
+Retain a modified phrase only when it provides an independent retrieval route not covered by the central entity:
+
+* \`fake caterers\`
+* \`ledger facsimile\`
+* \`safehouse breakfast\`
+* \`counter-surveillance camera\`
+
+When several clues establish one conclusion, usually tag the resulting finding rather than each supporting clue:
+
+* Uniforms, badges, and vehicle access → \`fake caterers\`
+* Payments and company records → \`Bromet\`
+* A covert tactical team at the gala → \`suspected assassination\`
+* A rental used for equipment and disguises → \`staging villa\`
+
+A supporting clue may remain only when it is memorable, likely to recur, or independently useful for retrieval.
+
+Keywords should normally:
+
+* Contain 1–4 words.
+* Use ordinary noun phrases.
+* Identify genuinely distinct parts of the summary.
+* Remain stable if later descriptions use different wording.
+
+Exclude:
+
+* Incidental scenery or props.
+* Exact times, quantities, card digits, invoice wording, or administrative details.
+* Generic themes such as \`danger\`, \`romance\`, or \`conversation\`.
+* Unsupported conclusions.
+* Sentence-like evidence descriptions.
+* Multiple keywords that merely restate or narrow the same named entity.
+
+Before returning the JSON, silently verify that each keyword is natural to search, continuity-relevant, stable under paraphrasing, independently useful, and no longer than necessary.
+
+Requirements:
+- Respect chronology.
+- Keep the summary compact but preserve major plot and continuity.
+- Ignore OOC and flavor-only detail unless it affects future events.
+- Use member_ids whenever possible.
+- Return only valid JSON.`,
+
+    'STMemoryBooks_SummaryPrompt_Regenerate': `You are an expert narrative analyst and memory-engine assistant. Combine and condense all included {{stmbchildtier}} entries into one coherent {{stmbtier}} summary.
+
+Reconstruct the events chronologically, with a clear beginning, development, and conclusion. Exercise judgment: preserve major plot, character, relationship, and continuity developments while omitting scenery, filler, banter, repeated actions, and throwaway logistics.
+
+Write in **past tense** and **third person**. Exclude all [OOC], meta discussion, and information unsupported by the source entries. Ensure the entire response is valid JSON. Within all string values, escape double quotation marks, backslashes, and line breaks as required by JSON. Represent line breaks in the content field with \`\\n\`; do not place literal unescaped newlines inside the string.
+
+Use specific nouns and proper nouns when they aid continuity or retrieval, such as “rice cooker” rather than “appliance,” but omit objects that serve only as scenery or flavor.
+
+Use adjectives and adverbs only when they materially affect tone, emotion, characterization, danger, or continuity.
+
+Organize events through **cause → intention → reaction → consequence**. Consolidate repeated actions and dialogue into unified narrative beats. Every sentence should contribute new information. Favor compression over exhaustive coverage.
+
+Return **only valid JSON**, with no commentary or code fences, in this structure:
+
+{
+"title": "Short descriptive title of 3–6 words",
+"content": "Markdown-formatted synopsis",
+"keywords": ["keyword1", "keyword2", "keyword3"]
+}
+
+The \`content\` field must use this structure:
+
+# [Scene Title]
+
+**Timeline**: [Most specific date and time supported by the source entries; if unspecified, state unspecified or use relative time.]
+
+## Story Beats
+
+* Present the major actions, revelations, decisions, and emotional or magical shifts in chronological order.
+* Explain what triggered each development, why characters acted, how others reacted, and what resulted.
+* Include plot-affecting interactions, meaningful shared experiences, and events that changed relationships or future continuity.
+* Omit repeated gestures, room dressing, background objects, and logistical detail unless they directly affected events.
+
+## Character Dynamics
+
+* Explain how motives, emotions, relationships, and power dynamics changed during the summarized period.
+* Capture consequential subtext, tension, vulnerability, trust, conflict, avoidance, affection, resentment, or loyalty.
+* Include small or domestic experiences only when they meaningfully shaped relationship history.
+* Do not repeat plot events unless needed to explain the interpersonal change they caused.
+
+## Important Facts
+
+* Record newly established facts likely to matter later, including plans, risks, abilities, limitations, preferences, promises, secrets, debts, injuries, magical effects, discoveries, and obligations.
+* Exclude casual preferences, scenery, errands, paperwork, clothing, furniture, weather, and other incidental details unless they became continuity-relevant.
+
+## Key Exchanges
+
+* Include only dialogue that defined a revelation, decision, conflict, emotional shift, or relationship change.
+* Attribute each quotation by speaker name.
+* Include a direct quotation only when the source entries preserve its exact wording. Never reconstruct quoted dialogue from a paraphrase.
+* Preserve distinctive phrases or identifiers, such as “pack for forever” or “dick-measuring contest,” only when they are memorable or relationship-relevant.
+* Include no more than 8 quotations.
+
+## Outcome & Continuity
+
+* State the final narrative, emotional, relational, physical, or magical condition produced by the events.
+* Record resulting decisions, plans, risks, promises, secrets, injuries, knowledge, and obligations that affect what happens next.
+* Identify unresolved threads, pending conflicts, future consequences, and foreshadowed developments.
+* Do not recap the full sequence of events again.
+
+For the \`keywords\` field:
+
+Generate **12–20 natural retrieval keywords when the material supports them**. Use fewer rather than padding the list with weak terms. Keywords are search hooks, not miniature summaries or evidence notes.
+
+Prioritize:
+
+1. **Stable named entities**: people other than {{char}} or {{user}}, places, organizations, events, documents, factions, spells, or distinctive objects.
+2. **Major continuity anchors**: plans, threats, secrets, discoveries, investigations, conflicts, injuries, promises, relationship changes, and unresolved threads.
+3. **Memorable moments**: meaningful shared activities, gifts, food, rituals, jokes, care-taking, arguments, or domestic events.
+4. **Independent secondary hooks** that retrieve a separate part of the summarized material.
+
+### Keyword construction
+
+Use the shortest distinctive wording likely to remain recognizable under paraphrasing or reversed word order.
+
+Examples:
+
+* \`Gala of the Silver Rose\` or \`Silver Rose Gala\` → \`Silver Rose\`
+* \`Bromet Response SA\` → \`Bromet\`
+* \`Château D’Aramitz\`, Comte D’Aramitz, or a plan involving him → \`D’Aramitz\`
+* Keep \`Althof Ledger\` when both words are required to identify the object.
+
+Prefer one central named entity when it already covers several related events:
+
+* \`D’Aramitz rescue plan\` → \`D’Aramitz\`
+* \`Bromet hidden contractors\` → \`Bromet\`
+* \`Althof Ledger substitution\` → \`Althof Ledger\`
+
+Retain a modified phrase only when it provides an independent retrieval route not covered by the central entity:
+
+* \`fake caterers\`
+* \`ledger facsimile\`
+* \`safehouse breakfast\`
+* \`counter-surveillance camera\`
+
+When several clues establish one conclusion, usually tag the resulting finding rather than each supporting clue:
+
+* Uniforms, badges, and vehicle access → \`fake caterers\`
+* Payments and company records → \`Bromet\`
+* A covert tactical team at the gala → \`suspected assassination\`
+* A rental used for equipment and disguises → \`staging villa\`
+
+A supporting clue may remain only when it is memorable, likely to recur, or independently useful for retrieval.
+
+Keywords should normally:
+
+* Contain 1–4 words.
+* Use ordinary noun phrases.
+* Identify genuinely distinct parts of the summary.
+* Remain stable if later descriptions use different wording.
+
+Exclude:
+
+* Incidental scenery or props.
+* Exact times, quantities, card digits, invoice wording, or administrative details.
+* Generic themes such as \`danger\`, \`romance\`, or \`conversation\`.
+* Unsupported conclusions.
+* Sentence-like evidence descriptions.
+* Multiple keywords that merely restate or narrow the same named entity.
+
+Before returning the JSON, silently verify that each keyword is natural to search, continuity-relevant, stable under paraphrasing, independently useful, and no longer than necessary.`,
+
+    'STMemoryBooks_SummaryPrompt_Tiny': `You specialize in compressing many small {{stmbchildtier}} entries into compact, coherent {{stmbtier}} summaries.
+
+Return JSON only:
+{
+  "summaries": [
+    { "title": "...", "summary": "...", "keywords": ["..."], "member_ids": ["<ID>", "..."] }
+  ],
+  "unassigned_items": [
+    { "id": "...", "reason": "..." }
+  ]
+}
+
+Rules:
+- Focus on plot, emotional progression, decisions, conflicts, and continuity.
+- Very clearly trace cause-effect in order to make the plot and continuity understandable.
+- Keep compression aggressive but accurate.
+- Identify non-fitting items in unassigned_items.
+- No commentary outside JSON.`,
 
     // Chat Compile
     'chatcompile.errors.sceneMarkersRequired': 'Scene markers are required for compilation',
@@ -1079,8 +1742,12 @@ Rules:
     'STMemoryBooks_Slash_SceneMemory_Help': 'Set scene range and create memory (e.g., /scenememory 10-15)',
     'STMemoryBooks_Slash_SceneMemory_ArgRangeDesc': 'Message range (X-Y format)',
     'STMemoryBooks_Slash_NextMemory_Help': 'Create memory from end of last memory to current message',
-    'STMemoryBooks_Slash_SidePrompt_Help': 'Run side prompt (no args opens picker). Usage: /sideprompt "Name" [X-Y]',
-    'STMemoryBooks_Slash_SidePrompt_ArgDesc': 'Template name (quote if contains spaces), optionally followed by X-Y range',
+    'STMemoryBooks_Slash_Catchup_Help': 'Create scene memories over a message range in chunks. Usage: /stmb-catchup interval=50 start=0 end=600',
+    'STMemoryBooks_Slash_Catchup_ArgIntervalDesc': 'Chunk size (number of messages per chunk)',
+    'STMemoryBooks_Slash_Catchup_ArgStartDesc': 'Starting message ID',
+    'STMemoryBooks_Slash_Catchup_ArgEndDesc': 'Ending message ID',
+    'STMemoryBooks_Slash_SidePrompt_Help': 'Run side prompt (no args opens picker). Usage: /sideprompt "Name" {{macro}}="value" [X-Y]',
+    'STMemoryBooks_Slash_SidePrompt_ArgDesc': 'Quoted template name, then any required {{macro}}="value" assignments, optionally followed by X-Y range',
     'STMemoryBooks_Slash_SidePromptOn_Help': 'Enable a Side Prompt by name or all. Usage: /sideprompt-on "Name" | all',
     'STMemoryBooks_Slash_SidePromptOn_ArgDesc': 'Template name (quote if contains spaces) or "all"',
     'STMemoryBooks_Slash_SidePromptOff_Help': 'Disable a Side Prompt by name or all. Usage: /sideprompt-off "Name" | all',
@@ -1098,34 +1765,128 @@ You must respond with ONLY valid JSON in this exact format:
 }
 
 For the content field, create a detailed beat-by-beat summary in narrative prose. First, note the dates/time. Then capture this scene accurately without losing ANY important information EXCEPT FOR [OOC] conversation/interaction. All [OOC] conversation/interaction is not useful for summaries.
-This summary will go in a vectorized database, so include:
+This summary will go in lorebook entry, so include:
 - All important story beats/events that happened
 - Key interaction highlights and character developments
 - Notable details, memorable quotes, and revelations
 - Outcome and anything else important for future interactions between {{user}} and {{char}}
 Capture ALL nuance without repeating verbatim. Make it comprehensive yet digestible.
 
-For the keywords field, provide 15-30 specific, descriptive, relevant keywords for vectorized database retrieval. Keywords must be concrete and scene-specific (locations, objects, proper nouns, unique actions). Do not use abstract themes (e.g., "sadness", "love") or character names.
+For the keywords field, provide 15-30 specific, descriptive, relevant keywords for keyword retrieval via word-matching in chat context. Keywords must be concrete and scene-specific (locations, objects, proper nouns, unique actions). Do not use abstract themes (e.g., "sadness", "love") or character names.
 
 Return ONLY the JSON, no other text.`,
 
-    'STMemoryBooks_Prompt_summarize': `Analyze the following roleplay scene and return a structured summary as JSON.
+    'STMemoryBooks_Prompt_group': `Analyze the following roleplay scene and create a memory entry from an omniscient POV.
+
+You must respond with ONLY valid JSON in this exact format:
+{
+  "title": "Short, descriptive scene title (3-6 words)",
+  "content": "Structured memory summary...",
+  "keywords": ["keyword1", "keyword2", "keyword3"]
+}
+
+- Write the memory as continuity relevant to the target group as a shared unit.
+- Include shared events, mutual decisions, group plans, promises, conflicts, secrets, relationship shifts, unresolved tensions, and facts that affect the group dynamic.
+- Include individual actions or emotions only when they changed the shared group state.
+- Do not create a merged personality for the group. Keep attribution clear: Alice did X, Bob thought Y, both agreed Z.
+- If only one member knows something, say so. Do not imply shared knowledge unless the scene supports it.
+
+For the content field, use this markdown structure:
+
+# [Scene Title]
+**Timeline**: (date/day/time, if known)
+
+## Target-Relevant Events
+- Summarize the events that matter to this group in chronological order.
+- Use cause -> intention -> reaction -> consequence logic.
+- Exclude flavor-only details unless they reveal a lasting character or relationship change.
+
+## Attribution
+- Clearly state who did what.
+- Clearly state who knew what.
+- Clearly state who felt, believed, suspected, misunderstood, or intended what.
+- Do not assign private thoughts or emotions to a character unless the scene text supports them.
+
+## Continuity Impact
+- Record what should matter in future scenes: decisions, injuries, promises, secrets, changed relationships, new knowledge, unresolved threads, practical consequences, emotional shifts, or altered trust.
+- Separate shared knowledge from member-specific knowledge.
+
+## Exclusions
+- Ignore and exclude all [OOC] or meta discussion.
+- Do not include unsupported assumptions.
+- Do not collapse multiple characters into vague phrases like "they felt" unless every target member clearly felt it.
+
+For the keywords field:
+- Generate 15-30 standalone topical keywords for retrieval.
+- Keywords must be concrete and scene-specific: locations, objects, proper nouns, unique actions, repeated motifs, plans, injuries, named events, or distinctive phrases.
+- Do not use abstract themes.
+- Do not use these major character names as keywords: {{group}}. NPC names may be used if the NPC played a major role.
+- Prefer keywords that would fire if the user later mentions the noun/action alone.
+
+Return ONLY the JSON, no additional text.`,
+
+    'STMemoryBooks_Prompt_char': `Analyze the following scene and create a memory entry written with {{char}} as the focus.
+
+You must respond with ONLY valid JSON in this exact format:
+{
+  "title": "Short, descriptive scene title (3-6 words)",
+  "content": "Structured memory summary...",
+  "keywords": ["keyword1", "keyword2", "keyword3"]
+}
+
+Important: This is NOT a general scene summary. This is a targeted memory entry.
+- Write the memory as continuity relevant to {{char}}.
+- Include what {{char}} did, said, thought, felt, noticed, learned, decided, promised, concealed, misunderstood, or was affected by.
+- Include other characters depending on how their actions, words, emotions, or decisions matter to {{char}}'s future continuity.
+- Do not include information {{char}} could not know unless it directly affects future continuity and is clearly marked as external scene knowledge.
+- Attribute all actions, thoughts, emotions, and knowledge clearly. Do not blur characters together.
+
+For the content field, use this markdown structure:
+
+# [Scene Title]
+**Timeline**: (date/day/time, if known)
+
+## Target-Relevant Events
+- Summarize the events that matter to {{char}} in chronological order.
+- Use cause -> intention -> reaction -> consequence logic.
+- Exclude flavor-only details unless they reveal a lasting character or relationship change.
+
+## Attribution
+- Clearly state who did what.
+- Clearly state who knew what.
+- Clearly state who felt, believed, suspected, misunderstood, or intended what.
+- Do not assign private thoughts or emotions to a character unless the scene text supports them.
+
+## Continuity Impact
+- Record what should matter in future scenes: decisions, injuries, promises, secrets, changed relationships, new knowledge, unresolved threads, practical consequences, emotional shifts, or altered trust.
+- Separate shared knowledge from member-specific knowledge.
+
+## Exclusions
+- Ignore and exclude all [OOC] or meta discussion.
+- Do not summarize the whole scene if it is not relevant to {{char}}.
+- Do not include unsupported assumptions.
+
+For the keywords field, generate 15-30 specific, descriptive, highly relevant keywords for database retrieval - focus on the most important topical terms. Keywords must be concrete and scene-specific (locations, objects, proper nouns, unique actions). No compound keywords unless they are proper nouns. Do not use abstract themes (e.g., "sadness", "love") or character names.
+
+Return ONLY the JSON, no additional text.`,
+
+    'STMemoryBooks_Prompt_summarize': `Analyze the following roleplay scene and return structured processed output as JSON.
 
 You must respond with ONLY valid JSON in this exact format:
 {
   "title": "Short scene title (1-3 words)",
-  "content": "Detailed summary with markdown headers...",
+  "content": "Detailed processed output with markdown headers...",
   "keywords": ["keyword1", "keyword2", "keyword3"]
 }
 
-For the content field, create a detailed bullet-point summary using markdown with these headers (but skip and ignore all OOC conversation/interaction):
+For the content field, process the scene into detailed bullet points using markdown with these headers (but skip and ignore all OOC conversation/interaction):
 - **Timeline**: Day/time this scene covers.
 - **Story Beats**: List all important plot events and story developments that occurred.
 - **Key Interactions**: Describe the important character interactions, dialogue highlights, and relationship developments.
 - **Notable Details**: Mention any important objects, settings, revelations, or details that might be relevant for future interactions.
-- **Outcome**: Summarize the result, resolution, or state of affairs at the end of the scene.
+- **Outcome**: Process the result, resolution, or state of affairs at the end of the scene.
 
-For the keywords field, provide 15-30 specific, descriptive, relevant keywords that would help a vectorized database find this conversation again if something is mentioned. Keywords must be concrete and scene-specific (locations, objects, proper nouns, unique actions). Do not use abstract themes (e.g., "sadness", "love") or character names.
+For the keywords field, provide 15-30 specific, descriptive, relevant keywords that would help a keyworded database find this conversation again if something is mentioned. Keywords must be concrete and scene-specific (locations, objects, proper nouns, unique actions). Do not use abstract themes (e.g., "sadness", "love") or character names.
 
 Ensure you capture ALL important information - comprehensive detail is more important than brevity.
 
@@ -1154,7 +1915,7 @@ For the content field, create a long and detailed beat-by-beat summary using mar
 
 Include EVERYTHING important for future interactions between {{user}} and {{char}}. Capture all nuance without regurgitating verbatim.
 
-For the keywords field, provide 15-30 specific, descriptive, relevant keywords for vectorized database retrieval. Keywords must be concrete and scene-specific (locations, objects, proper nouns, unique actions). Do not use abstract themes (e.g., "sadness", "love") or character names.
+For the keywords field, provide 15-30 specific, descriptive, relevant keywords for keyworded database retrieval. Keywords must be concrete and scene-specific (locations, objects, proper nouns, unique actions). Do not use abstract themes (e.g., "sadness", "love") or character names.
 
 Return ONLY the JSON, no other text.`,
 
@@ -1171,7 +1932,7 @@ For the content field, write a comprehensive beat summary that captures this sce
 # Scene Summary - Day X - [Title]
 First note the dates/time covered by the scene. Then narrate ALL important story beats/events that happened, key interaction highlights, notable details, memorable quotes, character developments, and outcome. Ensure no important information is lost. [OOC] conversation/interaction is not useful for summaries and should be ignored and excluded.
 
-For the keywords field, provide 15-30 specific, descriptive, relevant keywords that would help a vectorized database find this summary again if mentioned. Keywords must be concrete and scene-specific (locations, objects, proper nouns, unique actions). Do not use abstract themes (e.g., "sadness", "love") or character names.
+For the keywords field, provide 15-30 specific, descriptive, relevant keywords that would help a keyworded database find this summary again if mentioned. Keywords must be concrete and scene-specific (locations, objects, proper nouns, unique actions). Do not use abstract themes (e.g., "sadness", "love") or character names.
 
 Return ONLY the JSON, no other text.`,
 
@@ -1214,7 +1975,7 @@ You must respond with ONLY valid JSON in this exact format:
   "keywords": ["keyword1", "keyword2", "keyword3"]
 }
 
-For the content field, create a beat-by-beat summary in narrative prose. Capture all key plot points that advance the story and character memories that leave a lasting impression, ensuring nothing essential is omitted. This summary will go in a vectorized database, so include:
+For the content field, create a beat-by-beat summary in narrative prose. Capture all key plot points that advance the story and character memories that leave a lasting impression, ensuring nothing essential is omitted. This summary will go in a keyworded database, so include:
 
 - Story beats, events, actions and consequences, turning points, and outcomes
 - Key character interactions, character developments, significant dialogue, revelations, emotional impact, and relationships
@@ -1241,56 +2002,107 @@ Use concrete nouns (e.g., “rice cooker” > “appliance”).
 Only use adjectives/adverbs when they materially affect tone, emotion, or characterization.
 Focus on **cause → intention → reaction → consequence** chains for clarity and compression.
 
+The \`content\` field must use this structure:
+
 # [Scene Title]
-**Timeline**: (day/time)
+
+**Timeline**: [Most specific date and time supported by the source entries; if unspecified, state unspecified or use relative time.]
 
 ## Story Beats
-- Present all major actions, revelations, and emotional or magical shifts in order.
-- Capture clear cause–effect logic: what triggered what, and why it mattered.
-- Only include plot-affecting interactions and do not capture flavor-only beats.
+
+* Present the major actions, revelations, decisions, and emotional or magical shifts in chronological order.
+* Explain what triggered each development, why characters acted, how others reacted, and what resulted.
+* Include plot-affecting interactions, meaningful shared experiences, and events that changed relationships or future continuity.
+* Omit repeated gestures, room dressing, background objects, and logistical detail unless they directly affected events.
 
 ## Character Dynamics
-- Summarize how each character’s **motives, emotions, and relationships** evolved.
-- Include subtext, tension, or silent implications.
-- Highlight key beats of conflict, vulnerability, trust, or power shifts.
+
+* Explain how motives, emotions, relationships, and power dynamics changed during the summarized period.
+* Capture consequential subtext, tension, vulnerability, trust, conflict, avoidance, affection, resentment, or loyalty.
+* Include small or domestic experiences only when they meaningfully shaped relationship history.
+* Do not repeat plot events unless needed to explain the interpersonal change they caused.
+
+## Important Facts
+
+* Record newly established facts likely to matter later, including plans, risks, abilities, limitations, preferences, promises, secrets, debts, injuries, magical effects, discoveries, and obligations.
+* Exclude casual preferences, scenery, errands, paperwork, clothing, furniture, weather, and other incidental details unless they became continuity-relevant.
 
 ## Key Exchanges
-- Include only pivotal dialogue that defines tone, emotion, or change.
-- Attribute speakers by name; keep quotes short but exact.
-- BE SELECTIVE. Maximum of 8 quotes.
+
+* Include only dialogue that defined a revelation, decision, conflict, emotional shift, or relationship change.
+* Attribute each quotation by speaker name.
+* Include a direct quotation only when the source entries preserve its exact wording. Never reconstruct quoted dialogue from a paraphrase.
+* Preserve distinctive phrases or identifiers, such as “pack for forever” or “dick-measuring contest,” only when they are memorable or relationship-relevant.
+* Include no more than 8 quotations.
 
 ## Outcome & Continuity
-- Detail resulting **decisions, emotional states, physical/magical effects, or narrative consequences**.
-- Include all elements that influence future continuity (knowledge, relationships, injuries, promises, etc.).
-- Note any unresolved threads or foreshadowed elements.
 
-Write compactly but completely — every line should add new information or insight.
-Synthesize redundant actions or dialogue into unified cause–effect–emotion beats.
-Favor compression over coverage whenever the two conflict; omit anything that can be inferred from context or established characterization.
+* State the final narrative, emotional, relational, physical, or magical condition produced by the events.
+* Record resulting decisions, plans, risks, promises, secrets, injuries, knowledge, and obligations that affect what happens next.
+* Identify unresolved threads, pending conflicts, future consequences, and foreshadowed developments.
+* Do not recap the full sequence of events again.
 
-For the keywords field:
+For the \`keywords\` field:
 
-Generate **15–30 standalone topical keywords** that function as retrieval tags, not micro-summaries.
-Keywords must be:
-- **Concrete and scene-specific** (locations, objects, proper nouns, unique actions, repeated motifs).
-- **One concept per keyword** — do NOT combine multiple ideas into one keyword.
-- **Useful for retrieval if the user later mentions that noun or action alone**, not only in a specific context.
-- Not {{char}}'s or {{user}}'s names.
-- **Not thematic, emotional, or abstract.** Stop-list: intimacy, vulnerability, trust, dominance, submission, power dynamics, boundaries, jealousy, aftercare, longing, consent, emotional connection.
+Generate **12–20 natural retrieval keywords when the material supports them**. Use fewer rather than padding the list with weak terms. Keywords are search hooks, not miniature summaries or evidence notes.
 
-Avoid:
-- Overly specific compound keywords (“David Tokyo marriage”).
-- Narrative or plot-summary style keywords (“art dealer date fail”).
-- Keywords that contain multiple facts or descriptors.
-- Keywords that only make sense when the whole scene is remembered.
+Prioritize:
 
-Prefer:
-- Proper nouns (e.g., "Chinatown", "Ritz-Carlton bar").
-- Specific physical objects ("CPAP machine", "chocolate chip cookies").
-- Distinctive actions ("cookie baking", "piano apology").
-- Unique phrases or identifiers from the scene used by characters ("pack for forever", "dick-measuring contest").
+1. **Stable named entities**: people other than {{char}} or {{user}}, places, organizations, events, documents, factions, spells, or distinctive objects.
+2. **Major continuity anchors**: plans, threats, secrets, discoveries, investigations, conflicts, injuries, promises, relationship changes, and unresolved threads.
+3. **Memorable moments**: meaningful shared activities, gifts, food, rituals, jokes, care-taking, arguments, or domestic events.
+4. **Independent secondary hooks** that retrieve a separate part of the summarized material.
 
-Your goal: **keywords should fire when the noun/action is mentioned alone**, not only when paired with a specific person or backstory.
+### Keyword construction
+
+Use the shortest distinctive wording likely to remain recognizable under paraphrasing or reversed word order.
+
+Examples:
+
+* \`Gala of the Silver Rose\` or \`Silver Rose Gala\` → \`Silver Rose\`
+* \`Bromet Response SA\` → \`Bromet\`
+* \`Château D’Aramitz\`, Comte D’Aramitz, or a plan involving him → \`D’Aramitz\`
+* Keep \`Althof Ledger\` when both words are required to identify the object.
+
+Prefer one central named entity when it already covers several related events:
+
+* \`D’Aramitz rescue plan\` → \`D’Aramitz\`
+* \`Bromet hidden contractors\` → \`Bromet\`
+* \`Althof Ledger substitution\` → \`Althof Ledger\`
+
+Retain a modified phrase only when it provides an independent retrieval route not covered by the central entity:
+
+* \`fake caterers\`
+* \`ledger facsimile\`
+* \`safehouse breakfast\`
+* \`counter-surveillance camera\`
+
+When several clues establish one conclusion, usually tag the resulting finding rather than each supporting clue:
+
+* Uniforms, badges, and vehicle access → \`fake caterers\`
+* Payments and company records → \`Bromet\`
+* A covert tactical team at the gala → \`suspected assassination\`
+* A rental used for equipment and disguises → \`staging villa\`
+
+A supporting clue may remain only when it is memorable, likely to recur, or independently useful for retrieval.
+
+Keywords should normally:
+
+* Contain 1–4 words.
+* Use ordinary noun phrases.
+* Identify genuinely distinct parts of the summary.
+* Remain stable if later descriptions use different wording.
+
+Exclude:
+
+* Incidental scenery or props.
+* Exact times, quantities, card digits, invoice wording, or administrative details.
+* Generic themes such as \`danger\`, \`romance\`, or \`conversation\`.
+* Unsupported conclusions.
+* Sentence-like evidence descriptions.
+* Multiple keywords that merely restate or narrow the same named entity.
+
+Before returning the JSON, silently verify that each keyword is natural to search, continuity-relevant, stable under paraphrasing, independently useful, and no longer than necessary.
 
 Return ONLY the JSON — no additional text.`,
 
@@ -1307,7 +2119,9 @@ Return ONLY the JSON, no other text.`,
 
     // Built-in preset display names (English defaults; can be localized in locales/*.json)
     'STMemoryBooks_DisplayName_summary': 'Summary - Detailed beat-by-beat summaries in narrative prose',
-    'STMemoryBooks_DisplayName_summarize': 'Summarize - Bullet-point format',
+    'STMemoryBooks_DisplayName_group': 'Group - Shared group memory with clear attribution',
+    'STMemoryBooks_DisplayName_char': 'Character - Targeted character memory',
+    'STMemoryBooks_DisplayName_summarize': 'Process - Bullet-point format',
     'STMemoryBooks_DisplayName_synopsis': 'Synopsis - Long and comprehensive (beats, interactions, details) with headings',
     'STMemoryBooks_DisplayName_sumup': 'Sum Up - Concise story beats in narrative prose',
     'STMemoryBooks_DisplayName_minimal': 'Minimal - Brief 1-2 sentence summary',
@@ -1318,7 +2132,7 @@ Return ONLY the JSON, no other text.`,
     'STMemoryBooks_PromptManager_RecreateBuiltins': '♻️ Recreate Built-in Prompts',
     'STMemoryBooks_RecreateBuiltinsTitle': 'Recreate Built-in Prompts',
     'STMemoryBooks_RecreateBuiltinsWarning': 'This will remove overrides for all built‑in presets (summary, summarize, synopsis, sumup, minimal, northgate, aelemar, comprehensive). Any customizations to these built-ins will be lost. After this, built-ins will follow the current app locale.',
-    'STMemoryBooks_RecreateArcBuiltinsWarning': 'This will remove overrides for all built‑in presets (multi-arc, single, tiny). Any customizations to these built-ins will be lost. After this, built-ins will follow the current app locale.',
+    'STMemoryBooks_RecreateArcBuiltinsWarning': 'This will remove overrides for all built‑in presets (multi-arc, single, tiny, regenerate). Any customizations to these built-ins will be lost. After this, built-ins will follow the current app locale.',
     'STMemoryBooks_RecreateBuiltinsDoesNotAffectCustom': 'This does not affect your other custom presets.',
     'STMemoryBooks_RecreateBuiltinsOverwrite': 'Overwrite',
     'STMemoryBooks_RegexSelection_Title': '📐 Regex selection',
@@ -1330,7 +2144,68 @@ Return ONLY the JSON, no other text.`,
     'STMemoryBooks_RegexSelectionsSaved': 'Regex selections saved',
     'STMemoryBooks_FailedToSaveRegexSelections': 'Failed to save regex selections',
     'STMemoryBooks_UseRegexAdvanced': 'Use regex (advanced)',
-    'STMemoryBooks_ConfigureRegex': '📐 Configure regex…'
+    'STMemoryBooks_ConfigureRegex': '📐 Configure regex…',
+
+    'STMemoryBooks_ArcManualFix_EmptyJson': 'Corrected JSON is empty.',
+    'STMemoryBooks_ArcManualFix_InProgress': 'Summary consolidation is already in progress.',
+
+    // Audited missing lines
+    'STMemoryBooks_ArcManualFix_MissingArcs': 'Corrected JSON is missing summaries.',
+    'STMemoryBooks_ArcManualFix_MultiArcNeedsMemberIds': 'Multiple summaries require member_ids to avoid ambiguous assignment. Add member_ids or reduce to one summary.',
+    'STMemoryBooks_ArcManualFix_NoContext': 'Missing failure context; cannot apply corrected summary JSON.',
+
+    'STMemoryBooks_ConsolidateArcs_Preset': 'Preset',
+    'STMemoryBooks_CopiedProvider': 'Copied provider body',
+    'STMemoryBooks_CopiedRaw': 'Copied raw response',
+    'STMemoryBooks_CopyFailed': 'Copy failed',
+    'STMemoryBooks_DeselectAll': 'Deselect All',
+
+    'STMemoryBooks_FailedToDeletePreset': 'Failed to delete preset',
+    'STMemoryBooks_FailedToExportPrompts': 'Failed to export prompts',
+    'STMemoryBooks_FailedToOpenArcPromptManager': 'Failed to open Consolidation Prompt Manager',
+    'STMemoryBooks_FailedToRecreateBuiltins': 'Failed to recreate built-in prompts',
+
+    'STMemoryBooks_ManualFix_EmptyJson': 'Corrected JSON is empty.',
+    'STMemoryBooks_ManualFix_InProgress': 'Memory generation is already in progress.',
+    'STMemoryBooks_ManualFix_MissingContent': 'Corrected JSON is missing content.',
+    'STMemoryBooks_ManualFix_MissingKeywords': 'Corrected JSON is missing keywords array.',
+    'STMemoryBooks_ManualFix_MissingTitle': 'Corrected JSON is missing title.',
+    'STMemoryBooks_ManualFix_NoContext': 'Missing failure context; cannot apply corrected JSON.',
+    'STMemoryBooks_ManualFix_NoSceneRange': 'Missing scene range; cannot apply corrected JSON.',
+
+    'STMemoryBooks_Rebuild': 'Rebuild',
+    'STMemoryBooks_Run': 'Run',
+    'STMemoryBooks_SelectAll': 'Select All',
+    'STMemoryBooks_Slash_Highest_Help': 'Return the highest message index for processed memories in this chat. Usage: /stmb-highest',
+    'STMemoryBooks_Summary': 'Summary',
+    'STMemoryBooks_Title': 'Title',
+    'STMemoryBooks_UnknownError': 'Unknown error',
+
+    'STMemoryBooks_ReviewFailedAI_CodeLabel': 'Code',
+    'STMemoryBooks_ReviewFailedAI_CopyProvider': 'Copy Provider Body',
+    'STMemoryBooks_ReviewFailedAI_CopyRaw': 'Copy Raw',
+    'STMemoryBooks_ReviewFailedAI_CreateMemory': 'Create Memory from corrected JSON',
+    'STMemoryBooks_ReviewFailedAI_ErrorLabel': 'Error',
+    'STMemoryBooks_ReviewFailedAI_NoContext': 'Unable to apply corrected JSON because the original generation context is missing.',
+    'STMemoryBooks_ReviewFailedAI_NoRaw': 'No raw response was captured.',
+    'STMemoryBooks_ReviewFailedAI_ProviderBody': 'Provider Error Body',
+    'STMemoryBooks_ReviewFailedAI_RawLabel': 'Raw AI Response',
+    'STMemoryBooks_ReviewFailedAI_Title': 'Review Failed AI Response',
+
+    'STMemoryBooks_ReviewFailedArc_CodeLabel': 'Code',
+    'STMemoryBooks_ReviewFailedArc_CopyRaw': 'Copy Raw',
+    'STMemoryBooks_ReviewFailedArc_ErrorLabel': 'Error',
+    'STMemoryBooks_ReviewFailedArc_ExtractFields': 'Extract Title/Summary/Keywords',
+    'STMemoryBooks_ReviewFailedArc_ExtractFieldsFailed': 'Failed to extract fields',
+    'STMemoryBooks_ReviewFailedArc_ExtractedFieldsToast': 'Extracted fields from response',
+    'STMemoryBooks_ReviewFailedArc_FieldsTitle': 'Extractable Fields',
+    'STMemoryBooks_ReviewFailedArc_FillJson': 'Fill JSON from fields',
+    'STMemoryBooks_ReviewFailedArc_FillJsonFailed': 'Failed to build JSON',
+    'STMemoryBooks_ReviewFailedArc_FilledJsonToast': 'Filled JSON from fields',
+    'STMemoryBooks_ReviewFailedArc_NoContext': 'Unable to apply corrected JSON because the original consolidation context is missing.',
+    'STMemoryBooks_ReviewFailedArc_NoRaw': 'No raw response was captured.',
+    'STMemoryBooks_ReviewFailedArc_RawLabel': 'Raw AI Response',
+    'STMemoryBooks_ReviewFailedArc_ShowOriginal': 'Show original (pre-retry) response',
 };
 
 /**
@@ -1344,3 +2219,4 @@ export const localeData = {
     // 'es-es': localeData_es,
     // etc.
 };
+

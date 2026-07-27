@@ -1,7 +1,16 @@
+// Copyright (C) 2024–2026 Aiko Hanasaki
+// SPDX-License-Identifier: AGPL-3.0-only
+
 import { chat, name1, name2 } from '../../../../script.js';
 import { getContext } from '../../../extensions.js';
-import { estimateTokens } from './utils.js';
+import {
+    createGroupParticipantResolver,
+    estimateTokens,
+    resolveGroupParticipantFilterName,
+} from './utils.js';
 import { t as __st_t_tag, translate } from '../../../i18n.js';
+
+const MODULE_NAME = 'STMemoryBooks-ChatCompile';
 
 /**
  * Compile chat messages between scene markers into structured format
@@ -30,6 +39,8 @@ export function compileScene(sceneRequest) {
     
     // Extract and format messages in range
     const sceneMessages = [];
+    const participantFilterNames = new Set();
+    const groupParticipantResolver = createGroupParticipantResolver();
     let hiddenMessageCount = 0;
     let skippedMessageCount = 0;
     
@@ -55,10 +66,21 @@ export function compileScene(sceneRequest) {
             mes: cleanMessageContent(message.mes, message.is_user),
             send_date: message.send_date || new Date().toISOString()
         };
+
+        if (!message.is_user && typeof message.original_avatar === 'string' && message.original_avatar.trim()) {
+            compiledMessage.original_avatar = message.original_avatar.trim();
+        }
         
         // Add optional user indicator if available
         if (message.is_user !== undefined) {
             compiledMessage.is_user = message.is_user;
+        }
+
+        if (groupParticipantResolver && !message.is_user) {
+            const filterName = resolveGroupParticipantFilterName(message, groupParticipantResolver, i, MODULE_NAME);
+            if (filterName) {
+                participantFilterNames.add(filterName);
+            }
         }
         
         sceneMessages.push(compiledMessage);
@@ -78,6 +100,10 @@ export function compileScene(sceneRequest) {
         totalChatLength: chat.length,
         userName: name1 || translate('User', 'chatcompile.defaults.user')
     };
+
+    if (participantFilterNames.size > 0) {
+        metadata.characterFilterNames = Array.from(participantFilterNames);
+    }
     
     const compiledScene = {
         metadata,

@@ -1,10 +1,37 @@
+<!--
+Copyright (C) 2024–2026 Aiko Hanasaki
+SPDX-License-Identifier: AGPL-3.0-only
+-->
+
 # 📕 ST Memory Books - Dein KI-Chat-Gedächtnis-Assistent
 
 **Verwandle deine endlosen Chat-Gespräche in organisierte, durchsuchbare Erinnerungen!**
 
 Brauchst du einen Bot, der sich an Dinge erinnert, aber der Chat ist zu lang für den Kontext? Möchtest du wichtige Handlungspunkte automatisch verfolgen, ohne manuell Notizen zu machen? ST Memory Books macht genau das – es beobachtet deine Chats und erstellt intelligente Zusammenfassungen, damit du nie wieder den Faden deiner Geschichte verlierst.
 
-(Suchst du nach technischen Details hinter den Kulissen? Vielleicht möchtest du stattdessen [Wie STMB funktioniert](https://www.google.com/search?q=userguides%5ChowSTMBworks-en.md) lesen.)
+(Suchst du nach technischen Details hinter den Kulissen? Vielleicht möchtest du stattdessen [Wie STMB funktioniert](howSTMBworks-de.md) lesen.)
+
+---
+
+## 📑 Inhaltsverzeichnis
+
+- [Schnellstart](#-schnellstart-5-minuten-bis-zu-deiner-ersten-erinnerung)
+- [Was ST Memory Books eigentlich tut](#-was-st-memory-books-eigentlich-tut)
+- [Wähle deinen Stil](#-wähle-deinen-stil)
+- [Gruppenchats](#-gruppenchats)
+- [In Memory Book clippen](#️-in-memory-book-clippen)
+- [Clips vs. Side-Prompts](#️-clips-vs-side-prompts)
+- [Themen-Clip](#-themen-clip)
+- [Token sparen: Nachrichten ausblenden/einblenden](#-token-sparen-ausblenden--einblenden)
+- [Kompaktierung vs. Konsolidierung](#-kompaktierung-vs-konsolidierung)
+- [Zusammenfassungs-Konsolidierung](#-zusammenfassungs-konsolidierung)
+- [Tracker, Side-Prompts & Vorlagen](#-tracker-side-prompts--vorlagen-fortgeschrittene-funktion)
+- [Kompaktierung](#-kompaktierung)
+- [Einstellungen, die wirklich wichtig sind](#️-einstellungen-die-wirklich-wichtig-sind)
+- [Fehlerbehebung](#-fehlerbehebung-wenn-dinge-nicht-funktionieren)
+- [Was ST Memory Books nicht tut](#-was-st-memory-books-nicht-tut)
+- [Hilfe & Weitere Infos](#-hilfe--weitere-infos)
+- [Power-Up mit Lorebook Ordering (STLO)](#-power-up-mit-lorebook-ordering-stlo)
 
 ---
 
@@ -20,16 +47,18 @@ Brauchst du einen Bot, der sich an Dinge erinnert, aber der Chat ist zu lang fü
 
 ### Schritt 2: Schalte die Auto-Magie ein
 
-* Finde im Kontrollfeld **"Auto-Summary"**
+* Finde im Kontrollfeld **"Automatische Erinnerungs-Zusammenfassungen erstellen"**
 * Schalte es EIN (ON)
-* Stelle ein, dass alle **20-30 Nachrichten** Erinnerungen erstellt werden (ein guter Startpunkt)
+* Stelle **Intervall für automatische Zusammenfassung** auf **20-30 Nachrichten** ein (guter Startpunkt)
+* Halte **Puffer für automatische Zusammenfassung** am Anfang niedrig (`0-2` ist meist gut)
+* Erstelle zuerst eine manuelle Erinnerung, damit der Chat geprimt ist
 * Das war's! 🎉
 
 ### Schritt 3: Chatte ganz normal
 
 * Chatte wie gewohnt weiter
 * Nach 20-30 neuen Nachrichten wird ST Memory Books automatisch:
-* Die besten Szenengrenzen auswählen
+* Die neuen Nachrichten seit dem letzten verarbeiteten Punkt verwenden
 * Deine KI bitten, eine Zusammenfassung zu schreiben
 * Sie in deiner Erinnerungssammlung speichern
 * Dir eine Benachrichtigung anzeigen, wenn es fertig ist
@@ -60,7 +89,7 @@ Betrachte ST Memory Books als deinen **persönlichen KI-Bibliothekar** für Chat
 * Erstelle Erinnerungen auf Abruf für besondere Momente
 * Großartig, um wichtige Handlungspunkte oder Charakterentwicklungen festzuhalten
 
-### 📊 **Side Prompts & Intelligente Tracker**
+### 📊 **Side-Prompts & Intelligente Tracker**
 
 *"Ich möchte Beziehungen, Handlungsstränge oder Statistiken verfolgen"*
 
@@ -89,9 +118,10 @@ Betrachte ST Memory Books als deinen **persönlichen KI-Bibliothekar** für Chat
 
 **Wie es funktioniert:**
 
-1. Schalte "Auto-Summary" in den Einstellungen ein
-2. Wähle, wie oft Erinnerungen erstellt werden sollen (alle 20-50 Nachrichten funktioniert gut)
-3. Chatte ganz normal weiter – Erinnerungen passieren automatisch!
+1. Schalte `Automatische Erinnerungs-Zusammenfassungen erstellen` ein
+2. Stelle `Intervall für automatische Zusammenfassung` passend zu deinem Chattempo ein
+3. Optional: setze einen kleinen `Puffer für automatische Zusammenfassung`, wenn du verspätete Erstellung willst
+4. Chatte nach einer ersten manuellen Erinnerung ganz normal weiter
 
 **Was du bekommst:**
 
@@ -114,7 +144,7 @@ Betrachte ST Memory Books als deinen **persönlichen KI-Bibliothekar** für Chat
 1. Suche nach kleinen Pfeiltasten (► ◄) an deinen Chat-Nachrichten
 2. Klicke ► bei der ersten Nachricht einer wichtigen Szene
 3. Klicke ◄ bei der letzten Nachricht dieser Szene
-4. Öffne Memory Books (🪄) und klicke auf "Create Memory" (Erinnerung erstellen)
+4. Öffne Memory Books (🪄) und klicke auf "Erinnerung erstellen"
 
 **Was du bekommst:**
 
@@ -136,7 +166,9 @@ Betrachte ST Memory Books als deinen **persönlichen KI-Bibliothekar** für Chat
 * `/scenememory 10-25` - Erstelle Erinnerung aus den Nachrichten 10 bis 25
 * `/creatememory` - Erstelle Erinnerung aus der aktuell markierten Szene
 * `/nextmemory` - Fasse alles seit der letzten Erinnerung zusammen
-* `/sideprompt "Relationship Tracker"` - Führe einen benutzerdefinierten Tracker aus
+* `/sideprompt "Relationship Tracker" {{macro}}="value" [X-Y]` - Führe einen benutzerdefinierten Tracker aus, optional mit Bereich
+* `/sideprompt-on "Name"` oder `/sideprompt-off "Name"` - Schalte einen Side-Prompt manuell ein oder aus
+* `/stmb-set-highest <N|none>` - Setze die Auto-Summary-Basis für den aktuellen Chat
 
 **Was du bekommst:**
 
@@ -148,96 +180,502 @@ Betrachte ST Memory Books als deinen **persönlichen KI-Bibliothekar** für Chat
 
 ---
 
-## 🌈 Arc Summaries
+## 👥 Gruppenchats
 
-Arc Summaries (Handlungsbogen-Zusammenfassungen) werden manuell erstellt. Nichts wird zusammengefasst oder entfernt, es sei denn, du entscheidest dich dafür.
+Ja, ST Memory Books funktioniert mit Gruppenchats! Du kannst Szenen markieren, Erinnerungen manuell erstellen, automatische Zusammenfassungen verwenden und Slash-Befehle ausführen – genau wie in einem Einzelchat.
 
-### F: Was sind Arc Summaries?
+Du musst keinen versteckten „Gruppenmodus“-Schalter suchen. Öffne einfach deinen Gruppenchat und verwende STMB wie gewohnt.
 
-**A:** Arc Summaries helfen, lange Geschichten überschaubar zu halten. Mit der Zeit sammeln sich viele alte Speichereinträge an. Einige davon beschreiben den gleichen Teil der Geschichte.
-Eine Arc Summary ermöglicht es dir, mehrere ältere Erinnerungen in einer kürzeren Zusammenfassung zu kombinieren.
+### Was passiert mit einer Gruppenerinnerung?
 
-### F: Was passiert, wenn ich eine Arc Summary erstelle?
+STMB achtet darauf, wer während der Szene gesprochen hat. Wenn es die Beteiligten erkennen kann, fügt es diese Charaktere dem Charakterfilter der Erinnerung hinzu. Einfach gesagt: Die Erinnerung bleibt mit den Personen verbunden, die tatsächlich dabei waren, statt die ganze Gruppe wie einen einzigen riesigen Charakter zu behandeln.
 
-**A:** Wenn du eine Arc Summary erstellst:
+Der Zusammenfassungs-Prompt ist außerdem so formuliert, dass Namen und Wissen getrennt bleiben. Wenn Alice ein Versprechen gab und Bob ein Geheimnis erfuhr, sollte die Erinnerung genau das sagen – und nicht alles zu „sie wussten und fühlten dasselbe“ verwischen.
 
-* Die ausgewählten Erinnerungen werden zu einem neuen Eintrag kombiniert
-* Die neue Zusammenfassung ersetzt diese älteren Erinnerungen
-*(ältere Erinnerungen können automatisch ausgeblendet werden — nicht gelöscht)*
-* Die Geschichte wird weiterhin erinnert, aber mit weniger Tokens
+### Die einfache Einrichtung: ein Memory Book für die Gruppe
 
-### F: Warum Arc Summaries erstellen?
+Damit solltest du am besten beginnen.
 
-**A:** Arc Summaries sind nützlich, wenn:
+1. Verknüpfe ein Lorebook mit dem Gruppenchat.
+2. Erstelle Erinnerungen wie gewohnt.
+3. Das war's! STMB speichert die Erinnerungen im Gruppen-Memory-Book und fügt Beteiligtenfilter hinzu, wenn es die Sprecher erkennen kann.
 
-* Deine Erinnerungsliste sehr lang wird
-* Ältere Erinnerungen nicht mehr in vollem Detail benötigt werden
-* Du die Token-Nutzung in langen Chats reduzieren möchtest
+Wenn **Lorebook automatisch erstellen, falls keines existiert** aktiviert ist, kann STMB das Gruppen-Memory-Book für dich erstellen und verknüpfen.
 
-### F: Wie erstelle ich eine Arc Summary?
+Diese Einrichtung eignet sich am besten, wenn alle dieselbe allgemeine Handlungsgeschichte teilen und du keine getrennten Versionen jeder Erinnerung pflegen musst.
 
-**A:** Um eine Arc Summary zu erstellen:
+### Die erweiterte Einrichtung: separate Charakter-Memory-Books
 
-1. Klicke unten im STMB-Hauptpopup auf **🌈 Consolidate Memories into Arcs** (Erinnerungen zu Arcs konsolidieren).
-2. Wähle einen Arc-Typ:
-* **Multi-Arc**
-Die KI sucht nach natürlichen Unterbrechungen und erstellt mehrere Arcs.
-Du kannst eine Mindestanzahl von Erinnerungen pro Arc festlegen.
-*Funktioniert am besten mit starken Modellen (GPT, Gemini, Sonnet). Lokale Modelle könnten Probleme haben.*
-* **Single Arc**
-Die KI kombiniert alle ausgewählten Erinnerungen zu einem Arc.
-Vorherige Arcs werden einbezogen, um die Geschichte konsistent zu halten.
-* **Tiny**
-Eine schnellere, einfachere Option, die besser mit lokalen Modellen funktionieren kann,
-aber die Ergebnisse sind möglicherweise weniger detailliert.
+Soll die Gruppe eine gemeinsame Geschichte haben, während jeder Charakter zusätzlich seine eigenen relevanten Erinnerungen behält? Das ist mit dem **Manuellen Lorebook-Modus** und [SillyTavern-LorebookOrdering (STLO)](https://github.com/aikohanasaki/SillyTavern-LorebookOrdering) möglich.
 
+1. Installiere und aktiviere STLO.
+2. Öffne den Gruppenchat.
+3. Aktiviere in Memory Books den **Manuellen Lorebook-Modus**.
+4. Wähle das Haupt-Memory-Book der Gruppe aus.
+5. Wähle unter **Gruppencharakter-Lorebooks** für jedes Gruppenmitglied ein Memory Book aus.
+6. Erstelle deine Erinnerung.
+7. Prüfe vor der Generierung die Beteiligtenliste. STMB wählt die Charaktere, die es in der Szene gefunden hat, bereits voraus.
 
-3. Wähle die Erinnerungen aus, die du einschließen möchtest.
-4. Klicke auf **Run** und warte, bis die Arc-Analyse abgeschlossen ist.
+Die Hauptversion wird im Gruppen-Memory-Book gespeichert. Kopien werden nur in den zugewiesenen Memory Books der ausgewählten Beteiligten gespeichert. Wenn du alle Beteiligten abwählst, behandelt STMB die Erinnerung als für die gesamte Gruppe gültig.
+
+Wenn du mit der Beteiligtenerkennung von STMB zufrieden bist, aktiviere **Erkannte Beteiligte künftig automatisch übernehmen**, damit du die Liste nicht jedes Mal bestätigen musst.
+
+### Optional: eine gemeinsame und eine charakterbezogene Version schreiben
+
+Öffne den **Profil-Manager**, bearbeite dein Erinnerungsprofil und aktiviere **Separate Gruppen- und Charakter-Prompts in Gruppenchats verwenden**.
+
+- Der **Gruppen-Zusammenfassungs-Prompt** schreibt die gemeinsame Gruppenerinnerung.
+- Der **Charakter-Zusammenfassungs-Prompt** schreibt eine charakterbezogene Version für das individuell zugewiesene Charakter-Memory-Book, wenn du die erweiterte Einrichtung mit Manuellem Modus und STLO verwendest. Wenn mehrere Mitglieder dasselbe zugewiesene Memory Book nutzen, behält STMB dort eine einzige gemeinsame Kopie.
+
+Das ist sehr nützlich, wenn Charaktere unterschiedliche Dinge wissen, verschiedene Teile der Szene wichtig finden oder ihre eigene emotionale Kontinuität brauchen. Es erzeugt jedoch zusätzliche KI-Anfragen. Lass die Option daher ausgeschaltet, wenn du diese getrennten Versionen nicht wirklich brauchst.
+
+### Einige Dinge, die du beachten solltest
+
+- Gruppenchateinstellungen und Fortschritt gehören zum aktuellen Chat. Wenn du zu einer anderen Gruppe oder einem anderen Chat wechselst, werden Szenenmarkierungen und der Basispunkt der verarbeiteten Nachrichten nicht übernommen.
+- Im Manuellen Modus benötigt jedes Gruppenmitglied ein gültig zugewiesenes Lorebook, bevor STMB die verteilte Erinnerung speichern kann.
+- Du kannst dasselbe Charakter-Memory-Book mehreren Gruppenmitgliedern zuweisen.
+- Wenn Sprechernamen ungewöhnlich oder doppelt vorhanden sind, prüfe die Beteiligtenliste, statt sie automatisch zu übernehmen.
+
+**Meine Empfehlung:** Beginne mit einem einzigen Gruppen-Memory-Book. Wechsle erst dann zu getrennten Charakter-Memory-Books, wenn deine Geschichte wirklich privates Wissen oder individuelle Kontinuität benötigt. Einfach ist gut, bis es nicht mehr ausreicht.
 
 ---
 
-## 🎨 Tracker, Side Prompts & Vorlagen (Fortgeschrittene Funktion)
+## ✂️ In Memory Book clippen
 
-**Side Prompts** sind Hintergrund-Tracker, die helfen, laufende Story-Informationen aufrechtzuerhalten.
-Sie laufen parallel zur Speichererstellung und können dieselben Notizen im Laufe der Zeit aktualisieren. Betrachte sie als **Helfer, die deine Geschichte beobachten und bestimmte Details auf dem neuesten Stand halten**.
+Verwende **In Memory Book clippen**, wenn du eine wichtige Zeile oder einen wichtigen Fakt speichern willst, ohne eine vollständige Szenen-Erinnerung zu erstellen. Markiere Text im Chat, klicke auf den schwebenden Scheren-Button und wähle dann einen bestehenden Clip-Eintrag aus oder erstelle einen neuen.
+
+Nicht sicher, ob es ein Clip oder ein Side-Prompt sein sollte? Siehe [Clips vs. Side-Prompts](#-clips-vs-side-prompts).
+
+### Wann sollte ich Clips verwenden?
+
+Clips sind am besten für kleine Fakten, an die sich die KI erinnern soll, zum Beispiel:
+
+- eine Vorliebe eines Charakters
+- ein Versprechen oder Geheimnis
+- ein Beziehungsdetail
+- ein Haustier, Ort, Gegenstand oder wiederkehrendes Detail
+- eine schnelle „Notiz an mich“, die keine vollständige Erinnerung braucht
+
+Für größere Szenen verwende stattdessen die normale Erinnerungserstellung.
+
+### Wie Clippen funktioniert
+
+1. Markiere den Satz oder Ausdruck, den du speichern willst.
+2. Klicke auf den schwebenden Scheren-Button.
+3. Wähle einen bestehenden Clip-Eintrag oder erstelle einen neuen.
+4. Prüfe die Eintragsvorschau.
+5. Speichere den Clip.
+
+Clip-Einträge sind normale Lorebook-Einträge, die mit `[STMB Clip]` markiert sind. Beispiel:
+
+```txt
+Seraphina Healed Me [STMB Clip]
+```
+
+Innerhalb des Eintrags hält STMB den Inhalt in einem sauberen Abschnittsformat:
+
+```md
+=== Seraphina Healed Me ===
+
+- Seraphina healed my wounds with magic.
+
+=== END Seraphina Healed Me ===
+```
+
+### Clip-Einträge erstellen oder umbenennen
+
+Wenn du einen neuen Clip-Eintrag erstellst, wird der Eintragstitel auch zur Abschnittsüberschrift. Du kannst den Eintrag während des Clippens umbenennen; STMB aktualisiert dann die Abschnittsüberschrift entsprechend.
+
+Neue Clip-Einträge können sein:
+
+- **immer aktiv**, wenn Fakten immer verfügbar sein sollen
+- **durch Schlüsselwörter aktiviert**, wenn Fakten nur bei passenden Wörtern erscheinen sollen
+
+Verwende Schlüsselwörter, wenn der Clip nur für ein bestimmtes Thema, einen Charakter, Ort, ein Haustier, einen Gegenstand oder eine Beziehung relevant ist.
+
+### Schwebender Scheren-Button
+
+Der schwebende Scheren-Button erscheint nur, nachdem du Text im Chat markiert hast. Du kannst diesen Button im Haupt-Popup von Memory Books ein- oder ausschalten.
+
+### Lange Clip-Einträge überprüfen
+
+Wenn ein Clip-Eintrag lang wird, kann STMB dich daran erinnern, ihn zu überprüfen. Du kannst ihn selbst bearbeiten oder **Kompaktierung** verwenden, um die KI zu bitten, einen Clip-, Side-Prompt- oder STMB-Erinnerungseintrag token-effizienter zu machen, bevor du entscheidest, ob das Original ersetzt wird.
+
+---
+
+## ✂️ Clips vs. Side-Prompts
+
+Clips und Side-Prompts speichern beide Informationen in deinem Memory Book, aber sie haben nicht dieselbe Aufgabe.
+
+Einfache Regel: **Clips speichern einen bestimmten Fakt. Side-Prompts pflegen einen lebenden Tracker.**
+
+| **Clips** | **Side-Prompts** |
+|---|---|
+| Speichern ausgewählten Chat-Text in einem Memory-Book-Eintrag. | Bitten die KI, den Chat zu prüfen und einen Tracker-Eintrag zu aktualisieren. |
+| Am besten für einen klaren Fakt, eine Zeile, ein Versprechen, eine Vorliebe, einen Gegenstand oder eine Notiz. | Am besten für Informationen, die sich im Lauf der Zeit ändern, etwa Beziehungsstatus, Quest-Fortschritt, Inventar oder ungelöste Handlungsstränge. |
+| Du wählst den exakten Text. STMB speichert, was du markiert hast. | Die KI interpretiert den Chat und schreibt oder aktualisiert den Tracker. |
+| Verwende Clips, wenn der Fakt bereits offensichtlich ist und keine Analyse braucht. | Verwende Side-Prompts, wenn die KI mehrere Nachrichten vergleichen, zusammenfassen oder den Zustand aktualisieren muss. |
+| Wächst normalerweise nur, wenn du manuell einen weiteren Clip hinzufügst. | Kann wiederholt aktualisiert werden, während sich die Geschichte ändert. |
+| Denk: „diese Notiz anheften.“ | Denk: „diesen Abschnitt aktuell halten.“ |
+
+Gute Clips:
+
+- `Aiko mag Honigtee.`
+- `Andalino versprach, sie nicht wieder anzulügen.`
+- `Colt nennt sie Boss.`
+
+Gute Side-Prompts:
+
+- Beziehungsstatus
+- aktueller Quest-Fortschritt
+- Inventar und Ressourcen
+- NPC-Verzeichnis
+- ungelöste Handlungsstränge
+
+Wenn du nur ein einzelnes Detail merken willst, verwende einen Clip. Wenn du einen laufenden Tracker brauchst, verwende einen Side-Prompt.
+
+---
+
+---
+
+## 🔎 Themen-Clip
+
+Der Themen-Clip erstellt aus bereits vorhandenen Erinnerungen einen fokussierten „Über dieses Thema“-Eintrag.
+
+Stell es dir so vor, als würdest du STMB bitten:
+
+> „Lies meine gespeicherten Erinnerungen und erstelle einen nützlichen Eintrag über diese Person, diesen Ort, diese Beziehung, diesen Plotstrang, diesen Gegenstand, dieses Geheimnis oder dieses Thema.“
+
+Es ist weiterhin ein Clip-artiger Eintrag, aber du clippst keinen markierten Chat-Text. Stattdessen nutzt STMB bestehende Erinnerungseinträge als Quelle.
+
+Einfache Regel: **Clip speichert ausgewählten Text. Themen-Clip sammelt zusammengehörige Details aus gespeicherten Erinnerungen. Side-Prompts halten Tracker im Lauf der Zeit aktuell.**
+
+### Wann du den Themen-Clip verwenden solltest
+
+Verwende den Themen-Clip, wenn dein Memory Book bereits mehrere Erinnerungen enthält und du einen leichter auslösbaren Eintrag zu einem bestimmten Thema möchtest.
+
+Gute Beispiele:
+
+- Ein wiederkehrender NPC
+- Eine Beziehung zwischen zwei Figuren
+- Ein Rätsel oder eine Ermittlung
+- Ein Ort
+- Eine Fraktion
+- Kräfte, Verletzungen, Versprechen, Geheimnisse oder Vorlieben einer Figur
+- Ein Plotstrang, der in mehreren Szenen auftaucht
+
+Beispielthemen:
+
+```txt
+Seraphina
+{{user}}s Magie
+Alex und Miras Beziehung
+Die Black-Harbor-Ermittlung
+Der silberne Schlüssel
+```
+
+### Wann du den Themen-Clip nicht verwenden solltest
+
+Verwende den Themen-Clip nicht, wenn:
+
+- du nur eine einzelne markierte Zeile aus dem Chat speichern möchtest — nutze **Clip to Memory Book**
+- du einen Tracker möchtest, der bei zukünftigen Erinnerungsläufen automatisch aktualisiert wird — nutze **Side-Prompts**
+- du einen langen Eintrag kürzen möchtest — nutze **Kompaktierung**
+- du mehrere Erinnerungen zu einer höherstufigen Zusammenfassung kombinieren möchtest — nutze **Zusammenfassungs-Konsolidierung**
+
+### So verwendest du den Themen-Clip
+
+1. Öffne das Memory-Books-Popup.
+2. Klicke auf **🔎 Themen-Clip**.
+3. Wähle das **Quell-Memory-Book**.
+4. Gib das **Thema** ein.
+   - Das ist der Gegenstand, auf den sich die KI konzentrieren soll.
+   - Halte es spezifisch.
+5. Gib **Schlüsselwörter** ein.
+   - Diese werden zu den Aktivierungsschlüsselwörtern des Lorebook-Eintrags.
+   - Wenn du die Schlüsselwörter leer lässt, verwendet STMB das Thema.
+6. Wähle einen Modus:
+   - **Neuen Themen-Clip erstellen** erstellt einen neuen `[STMB Clip]`-Eintrag.
+   - **Vorhandenen Eintrag aktualisieren** aktualisiert einen bestehenden Clip-Eintrag.
+7. Wähle ein **Generierungsprofil**.
+   - Dieses steuert, welche KI-Verbindung/welches Modell den Entwurf schreibt.
+8. Optional: Klicke auf **Themen-Clip-Prompt bearbeiten**, wenn du die Anweisungen an die KI ändern möchtest.
+9. Klicke auf **Entwurf generieren**.
+10. Prüfe den generierten Entwurf.
+11. Bearbeite den Entwurf bei Bedarf.
+12. Klicke auf **Themen-Clip speichern**.
+
+STMB speichert den Entwurf nicht automatisch. Das Lorebook ändert sich erst, wenn du auf **Themen-Clip speichern** klickst.
+
+### Einen neuen Themen-Clip erstellen
+
+Wenn du einen neuen Themen-Clip erstellst, legt STMB einen Clip-artigen Lorebook-Eintrag an.
+
+Wenn dein Thema zum Beispiel lautet:
+
+```txt
+Seraphina
+```
+
+sieht der Eintragstitel so aus:
+
+```txt
+Über Seraphina [STMB Clip]
+```
+
+Der sichtbare Abschnitt im Eintrag verwendet denselben Clip-Wrapper-Stil wie normale Clip-Einträge.
+
+### Einen bestehenden Themen-Clip aktualisieren
+
+Der Themen-Clip kann auch einen bestehenden `[STMB Clip]`-Eintrag aktualisieren.
+
+Das ist nützlich, wenn du bereits einen Eintrag wie diesen hast:
+
+```txt
+Über Seraphina [STMB Clip]
+```
+
+und seit dem letzten Update neue Erinnerungen hinzugekommen sind.
+
+Wenn ein Themen-Clip-Update erfolgreich gespeichert wird, speichert STMB eine kleine Laufhistorie auf diesem Eintrag. Dazu gehören die Quell-Erinnerungen, die während des Laufs verwendet wurden. Beim nächsten Update kann STMB diese Historie nutzen, um nur neue oder geänderte Quell-Erinnerungen zu finden, statt alles erneut zu lesen.
+
+Das hält Updates kleiner und verhindert, dass dieselben alten Erinnerungen immer wieder an die KI gesendet werden.
+
+### Aus allen Quell-Erinnerungen neu erstellen
+
+Beim Aktualisieren eines bestehenden Themen-Clips siehst du eventuell **Aus allen Quell-Erinnerungen neu erstellen**.
+
+Lasse das für normale Updates ausgeschaltet. STMB verwendet nach Möglichkeit nur neue oder geänderte Quell-Erinnerungen.
+
+Schalte es ein, wenn:
+
+- der bestehende Themen-Clip stark veraltet ist
+- du den Themen-Clip-Prompt geändert hast
+- du Thema oder Schlüsselwörter deutlich geändert hast
+- die KI alle gespeicherten Erinnerungen zu diesem Thema neu prüfen soll
+- der Eintrag noch keine nützliche Laufhistorie hat
+
+### Welche Quelleinträge verwendet er?
+
+Der Themen-Clip nutzt bestätigte STMB-Erinnerungseinträge aus dem ausgewählten Memory Book.
+
+Er nutzt nicht:
+
+- normale Clip-Einträge
+- Side-Prompt-Tracker-Einträge
+- gewöhnliche Lorebook-Einträge, die nicht von STMB verwaltet werden
+
+So bleibt der Themen-Clip auf Erinnerungen beschränkt, die STMB sicher erkennen kann.
+
+### Gute Gewohnheiten für Themen-Clips
+
+Verwende fokussierte Themen.
+
+Besser:
+
+```txt
+Alex und Miras Beziehung
+```
+
+Weniger nützlich:
+
+```txt
+Alles über die Geschichte
+```
+
+Besser:
+
+```txt
+Der silberne Schlüssel
+```
+
+Weniger nützlich:
+
+```txt
+Wichtige Gegenstände
+```
+
+Der Themen-Clip funktioniert am besten, wenn das Thema eng genug ist, dass die KI erkennen kann, was dazugehört und was nicht.
+
+### Prompt-Bearbeitung
+
+Der Themen-Clip-Prompt ist bearbeitbar.
+
+Der Standard-Prompt weist die KI an:
+
+- nur Informationen zum Thema zu extrahieren
+- nicht verwandte Ereignisse zu vermeiden
+- Namen, Beziehungen, Vorlieben, Versprechen, Geheimnisse, Einschränkungen und offene Punkte zu bewahren
+- Widersprüche zu erwähnen, statt still eine Version auszuwählen
+- bestehenden Clip-Inhalt zu aktualisieren, ohne ihn zu duplizieren
+- keine fehlenden Details zu erfinden
+
+Der Prompt muss Folgendes enthalten:
+
+```txt
+{{SOURCE_MEMORIES}}
+```
+
+Ohne diesen Platzhalter weiß STMB nicht, wo es die Quell-Erinnerungen einfügen soll.
+
+Weitere unterstützte Platzhalter sind:
+
+```txt
+{{MODE}}
+{{TOPIC}}
+{{KEYWORDS}}
+{{EXISTING_CLIP}}
+{{EXISTING_ENTRY_CONTENT}}
+{{SOURCE_MEMORIES}}
+```
+
+Nutze **Auf Standard zurücksetzen**, wenn dein benutzerdefinierter Prompt nicht mehr gut funktioniert.
+
+---
+
+## 🙈 Token sparen: Ausblenden / Einblenden
+
+Eine der einfachsten Möglichkeiten, in langen Chats Token zu sparen, ist das Ausblenden von Nachrichten, nachdem sie bereits in Erinnerungen gespeichert wurden.
+
+### Was bedeutet „ausblenden“?
+
+Ausblenden löscht **nichts**. Die Nachrichten bleiben im Chat und die Erinnerungen bleiben im Lorebook. Sie werden nur aus der aktiven Ansicht und aus dem direkten KI-Kontext herausgenommen.
+
+### Wann ist das nützlich?
+
+* Dein Chat ist sehr lang geworden
+* Du hast die betreffenden Nachrichten bereits in Erinnerungen gespeichert
+* Du möchtest den Chat sauberer halten
+
+### Auto-hide nach der Erinnerungserstellung
+
+STMB kann Nachrichten nach dem Erstellen einer Erinnerung automatisch ausblenden:
+
+* **Nicht automatisch verstecken**: nichts wird automatisch ausgeblendet
+* **Alle Nachrichten bis zur letzten Erinnerung verstecken**: alles bis zur letzten Erinnerung wird ausgeblendet
+* **Nur Nachrichten in der letzten Erinnerung verstecken**: nur der zuletzt verarbeitete Bereich wird ausgeblendet
+
+Mit **Sichtbare Nachrichten beibehalten** bestimmst du, wie viele aktuelle Nachrichten sichtbar bleiben.
+
+### Vor der Erinnerungserstellung einblenden
+
+**Versteckte Nachrichten für die Erstellung von Erinnerungen einblenden (führt /unhide X-Y aus)** lässt STMB vor dem Erzeugen einer Erinnerung kurz `/unhide X-Y` ausführen. Das ist nützlich, wenn du Erinnerungen mit ausgeblendeten Nachrichten neu erstellen möchtest.
+
+### Gute Start-Einstellung
+
+* **Nur Nachrichten in der letzten Erinnerung verstecken**
+* **2** Nachrichten sichtbar lassen
+* **Versteckte Nachrichten für die Erstellung von Erinnerungen einblenden (führt /unhide X-Y aus)** aktivieren
+
+## 🧭 Kompaktierung vs. Konsolidierung
+
+Die Namen klingen ähnlich, aber die Funktionen haben verschiedene Aufgaben.
+
+Einfache Regel: **Kompaktierung räumt einen Eintrag auf. Konsolidierung kombiniert mehrere Erinnerungen zu einer höherstufigen Zusammenfassung.**
+
+| **Kompaktierung** | **Konsolidierung** |
+|---|---|
+| Macht einen bestehenden STMB-verwalteten Eintrag kleiner. | Kombiniert mehrere Erinnerungen oder Zusammenfassungen zu einer höherstufigen Zusammenfassung. |
+| Arbeitet jeweils mit einem Clip-, Side-Prompt- oder STMB-Erinnerungseintrag. | Arbeitet mit mehreren ausgewählten Erinnerungs-/Zusammenfassungseinträgen. |
+| Am besten, wenn ein Eintrag nützlich ist, aber zu lang, wiederholend oder zu teuer für den Kontext wird. | Am besten, wenn ältere Szenen-Erinnerungen sich stapeln und zu einem Arc, Chapter, Book, Legend, Series oder Epic zusammengefasst werden sollen. |
+| Schreibt den ausgewählten Eintrag in einer token-effizienteren Form neu. | Erstellt aus den ausgewählten Quellen einen neuen Zusammenfassungseintrag. |
+| Soll vorhandene Fakten bewahren und Ballast entfernen. | Soll den größeren Kontinuitätsbogen bewahren und Szenen-Detail reduzieren. |
+| Erstellt keine neue Erinnerung aus rohem Chat. | Kompaktiert nicht von selbst einen einzelnen aufgeblähten Eintrag. |
+| Denk: „diesen einen Eintrag kürzen.“ | Denk: „diese Erinnerungen zu einer Zusammenfassung bündeln.“ |
+
+Beide Werkzeuge sind review-first: STMB zeigt dir, was die KI geschrieben hat, bevor etwas gespeichert oder ersetzt wird.
+
+---
+
+## 🌈 Zusammenfassungs-Konsolidierung
+
+Zusammenfassungs-Konsolidierung hilft, lange Geschichten übersichtlich zu halten, indem ältere STMB-Erinnerungen zu höherstufigen Zusammenfassungen verdichtet werden.
+
+### Q: Was ist Zusammenfassungs-Konsolidierung?
+
+**A:** Statt für immer nur Szenen-Erinnerungen zu erstellen, kann STMB bestehende Erinnerungen oder Zusammenfassungen zu einer kompakteren Zusammenfassung verbinden. Die erste Stufe ist **Arc**; für längere Geschichten sind auch höhere Zusammenfassungsstufen verfügbar:
+
+- Arc
+- Chapter
+- Book
+- Legend
+- Series
+- Epic
+
+### Q: Warum sollte ich sie verwenden?
+
+**A:** Konsolidierung ist nützlich, wenn:
+
+- deine Erinnerungsliste sehr lang wird
+- ältere Einträge kein vollständiges Szenen-Detail mehr brauchen
+- du Token sparen willst, ohne Kontinuität zu verlieren
+- du sauberere, höherstufige narrative Zusammenfassungen möchtest
+
+### Q: Läuft sie automatisch?
+
+**A:** Nein. Konsolidierung braucht weiterhin eine Bestätigung.
+
+- Du kannst **Erinnerungen konsolidieren** jederzeit manuell im Haupt-Popup öffnen
+- Du kannst auch **Bei erreichter Ebene zur Konsolidierung auffordern** aktivieren
+- Wenn eine ausgewählte Zielstufe ihr gespeichertes Minimum an geeigneten Einträgen erreicht, zeigt STMB eine **Ja/Später**-Bestätigung
+- Wenn du **Ja** wählst, öffnet STMB das Konsolidierungs-Popup mit dieser Stufe bereits ausgewählt; es läuft nicht still im Hintergrund
+
+### Q: Wie benutze ich sie?
+
+**A:** Um eine konsolidierte Zusammenfassung zu erstellen:
+
+1. Klicke im Haupt-Popup von STMB auf **Erinnerungen konsolidieren**
+2. Wähle die Ziel-Zusammenfassungsstufe
+3. Wähle die Quell-Einträge aus, die enthalten sein sollen
+4. Deaktiviere optional die Quell-Einträge, nachdem die neue Zusammenfassung erstellt wurde
+5. Klicke auf **Run**
+
+Für Vorschauen dieser Einträge aktiviere „Vorschauen anzeigen“ in deinen Präferenzen.
+
+---
+
+## 🎨 Tracker, Side-Prompts & Vorlagen (Fortgeschrittene Funktion)
+
+**Side-Prompts** sind Hintergrund-Tracker, die helfen, laufende Story-Informationen aufrechtzuerhalten. Sie laufen parallel zur Speichererstellung und aktualisieren eigene Side-Prompt-Lorebook-Einträge über die Zeit. Betrachte sie als **Helfer, die deine Geschichte beobachten und bestimmte Details aktuell halten**.
 
 ### 🚀 **Schnellstart mit Vorlagen**
 
 1. Öffne die Einstellungen von Memory Books
-2. Klicke auf **Side Prompts**
+2. Klicke auf **Side-Prompts**
 3. Durchsuche die **Vorlagenbibliothek** und wähle aus, was zu deiner Geschichte passt:
-* **Character Development Tracker** – Verfolgt Persönlichkeitsveränderungen und Wachstum
-* **Relationship Dynamics** – Verfolgt Beziehungen zwischen Charakteren
-* **Plot Thread Tracker** – Verfolgt laufende Handlungsstränge
-* **Mood & Atmosphere** – Verfolgt den emotionalen Ton
-* **World Building Notes** – Verfolgt Details zum Schauplatz und zur Lore
-
-
+   * **Character Development Tracker** – Verfolgt Persönlichkeitsveränderungen und Wachstum
+   * **Relationship Dynamics** – Verfolgt Beziehungen zwischen Charakteren
+   * **Plot Thread Tracker** – Verfolgt laufende Handlungsstränge
+   * **Mood & Atmosphere** – Verfolgt den emotionalen Ton
+   * **World Building Notes** – Verfolgt Details zum Schauplatz und zur Lore
 4. Aktiviere die gewünschten Vorlagen (du kannst sie später anpassen)
-5. Deine Erinnerungen enthalten nun automatisch dieses Tracking
+5. Wenn die Vorlage benutzerdefinierte Laufzeitmakros enthält, wird sie nicht automatisch ausgeführt und muss manuell mit `/sideprompt` gestartet werden
 
-### ⚙️ **Wie Side Prompts funktionieren**
+### ⚙️ **Wie Side-Prompts funktionieren**
 
 * **Hintergrund-Tracker**: Sie laufen leise und aktualisieren Informationen im Laufe der Zeit
 * **Nicht störend**: Sie ändern nicht deine Haupt-KI-Einstellungen oder Charakter-Prompts
 * **Pro-Chat-Kontrolle**: Verschiedene Chats können unterschiedliche Tracker verwenden
 * **Vorlagenbasiert**: Verwende eingebaute Vorlagen oder erstelle deine eigenen
-* **Automatisch oder Manuell**: Einige laufen automatisch, andere können per Befehl ausgeführt werden
+* **Automatisch oder Manuell**: Standardvorlagen können automatisch laufen; Vorlagen mit benutzerdefinierten Laufzeitmakros sind nur manuell nutzbar
+* **Makro-Unterstützung**: `Prompt`, `Response Format`, `Title` und Keyword-Felder erweitern standardmäßige ST-Makros wie `{{user}}` und `{{char}}`
+* **Laufzeitmakros**: Nicht standardmäßige `{{...}}`-Platzhalter werden zu Pflichtangaben wie `{{npc name}}="Jane Doe"`
+* **Klartext erlaubt**: Side-Prompts müssen kein JSON zurückgeben
+* **Überschreiben statt Anhängen**: Side-Prompts aktualisieren ihren eigenen verfolgten Eintrag, statt bei jedem Lauf eine neue Erinnerung anzulegen
+* **Sicherheitsprüfung**: Wenn eine Vorlage benutzerdefinierte Laufzeitmakros enthält, entfernt STMB beim Speichern/Importieren automatische Trigger und zeigt eine Warnung an
+* **Optionaler Bereich**: `/sideprompt` kann auch ohne `X-Y` laufen; dann verwendet STMB die Nachrichten seit dem letzten Checkpoint dieses Side-Prompts
 
-Dies macht das Auslöseverhalten ohne Fachbegriffe verständlich.
+### 🛠️ **Side-Prompts verwalten**
 
-### 🛠️ **Side Prompts verwalten**
-
-* **Side Prompts Manager**: Erstelle, bearbeite, dupliziere und organisiere Tracker
+* **Side-Prompts-Manager**: Erstelle, bearbeite, dupliziere und organisiere Tracker
 * **Aktivieren / Deaktivieren**: Schalte Tracker jederzeit ein oder aus
 * **Import / Export**: Teile Vorlagen oder erstelle Backups
-* **Statusansicht**: Sieh, welche Tracker im aktuellen Chat aktiv sind
+* **Statusansicht**: Sieh, welche Tracker im aktuellen Chat aktiv sind und wann sie laufen
 
 ### 💡 **Beispiele für Vorlagen**
 
-* Side Prompt Vorlagenbibliothek (importiere dieses JSON):
-[SidePromptTemplateLibrary.json](https://www.google.com/search?q=/resources/SidePromptTemplateLibrary.json)
+* Side-Prompt-Vorlagenbibliothek (importiere dieses JSON):
+[SidePromptTemplateLibrary.json](../resources/SidePromptTemplateLibrary.json)
 
 Beispielhafte Prompt-Ideen:
 
@@ -246,136 +684,151 @@ Beispielhafte Prompt-Ideen:
 * „Notiere neue World-Building-Details, wenn sie erscheinen“
 * „Verfolge die Beziehung zwischen Charakter A und Charakter B“
 
-### 🔧 **Erstellen eigener Side Prompts**
+### 🔧 **Erstellen eigener Side-Prompts**
 
-1. Öffne den Side Prompts Manager
-2. Klicke auf **Create New** (Neu erstellen)
+1. Öffne den Side-Prompts-Manager
+2. Klicke auf **Neu erstellen**
 3. Schreibe eine kurze, klare Anweisung
-*(Beispiel: „Notiere immer, wie das Wetter in jeder Szene ist“)*
-4. Speichere und aktiviere sie
-5. Der Tracker wird diese Informationen nun im Laufe der Zeit aktualisieren
+   *(Beispiel: „Notiere immer, wie das Wetter in jeder Szene ist“)*
+4. Füge bei Bedarf Standard-ST-Makros wie `{{user}}` oder `{{char}}` hinzu
+5. Wenn du benutzerdefinierte Laufzeitmakros wie `{{location name}}` hinzufügst, starte sie manuell mit `/sideprompt "Name" {{location name}}="value"`
+6. Speichere und aktiviere sie
+7. Der Tracker aktualisiert diese Informationen dann im Laufe der Zeit, wenn automatische Trigger aktiv bleiben; andernfalls starte ihn bei Bedarf manuell
 
 ### 💬 **Pro-Tipp**
 
-Side Prompts funktionieren am besten, wenn sie **klein und fokussiert** sind.
-Statt „verfolge alles“, versuche „verfolge die romantische Spannung zwischen den Hauptcharakteren“.
+Side-Prompts funktionieren am besten, wenn sie **klein und fokussiert** sind. Statt „verfolge alles“ versuche „verfolge die romantische Spannung zwischen den Hauptcharakteren“.
+
+### ⌨️ **Manuelle /sideprompt-Syntax**
+
+Verwende:
+`/sideprompt "Name" {{macro}}="value" [X-Y]`
+
+Beispiele:
+- `/sideprompt "Status" 10-20`
+- `/sideprompt "NPC-Verzeichnis" {{npc name}}="Jane Doe" 40-50`
+- `/sideprompt "Ortsnotizen" {{place name}}="Black Harbor" 100-120`
+
+Hinweise:
+
+- Der Name des Side-Prompts muss in Anführungszeichen stehen.
+- Laufzeitmakro-Werte müssen ebenfalls in Anführungszeichen stehen.
+- Die Slash-Befehl-Autovervollständigung schlägt erforderliche Laufzeitmakros vor, nachdem du den Side-Prompt ausgewählt hast.
+- Wenn eine Vorlage benutzerdefinierte Laufzeitmakros enthält, bleibt STMB dabei im manuellen Modus und entfernt automatische Trigger.
+- `X-Y` ist optional. Wenn du es weglässt, verwendet STMB die Nachrichten seit dem letzten Zeitpunkt, an dem dieser Side-Prompt aktualisiert wurde.
+- Wenn du Side-Prompts manuell und getrennt ausführst, denke daran, **Versteckte Nachrichten für die Erstellung von Erinnerungen einblenden (führt /unhide X-Y aus)** zu aktivieren.
 
 ---
 
 ### 🧠 Erweiterte Textkontrolle mit der Regex-Erweiterung
 
-**Willst du die ultimative Kontrolle über den Text, der an die KI gesendet und von ihr empfangen wird?** ST Memory Books integriert sich jetzt nahtlos mit der offiziellen **Regex**-Erweiterung, was es dir ermöglicht, Text automatisch mithilfe benutzerdefinierter Regeln umzuwandeln.
+ST Memory Books kann ausgewählte Regex-Skripte vor der Generierung und vor dem Speichern ausführen.
 
-**Multi-Select Support:** Du kannst jetzt mehrere Regex-Skripte in der Regex-Erweiterung gleichzeitig auswählen. Alle aktivierten Skripte werden in der Reihenfolge bei jeder Stufe (Prompt und Antwort) angewendet, was mächtige und flexible Transformationen ermöglicht.
+* Aktiviere in STMB **Regex verwenden (fortgeschritten)**
+* Klicke auf **📐 Regex konfigurieren…**
+* Wähle getrennt, welche Skripte vor dem Senden an die KI und vor dem Speichern laufen sollen
+* Die Auswahl in STMB zählt auch dann, wenn ein Skript in der Regex-Erweiterung selbst deaktiviert ist
 
-Dies ist eine fortgeschrittene Funktion, perfekt für Benutzer, die:
+---
 
-* Automatisch wiederkehrende Phrasen oder Artefakte aus einer KI-Antwort bereinigen wollen.
-* Teile des Chat-Transkripts neu formatieren wollen, bevor die KI sie sieht.
-* Terminologie oder Charakter-Eigenheiten im laufenden Betrieb standardisieren wollen.
+## 🧹 Kompaktierung
 
-#### **Wie es funktioniert: Zwei einfache Hooks**
+Die **Kompaktierung** hilft, wenn ein von STMB verwalteter Lorebook-Eintrag noch nützlich ist, aber zu lang oder zu wiederholend geworden ist. Statt ihn manuell zu kürzen, kannst du die KI bitten, den Eintrag token-effizienter umzuschreiben.
 
-Die Integration funktioniert, indem deine aktivierten Regex-Skripte an zwei kritischen Punkten angewendet werden. Du steuerst, welche Skripte laufen, indem du ihre **Platzierung (Placement)** im Editor der Regex-Erweiterung festlegst:
+Dies ist ein Werkzeug mit **Prüfung zuerst**. STMB zeigt **Originalinhalt** und **Kompaktierter Entwurf** an, bevor irgendetwas ersetzt wird.
 
-1. **Modifizieren des Prompts (Ausgehender Text)**
-* **Zu verwendende Platzierung**: `User Input`
-* **Was es tut**: Fängt den vollständig zusammengestellten Prompt ab (einschließlich Chatverlauf, Systemanweisungen usw.), direkt bevor er zur Erstellung von Erinnerungen oder Side Prompts an die KI gesendet wird.
-* **Beispiel-Anwendungsfall**: Du könntest ein Skript erstellen, um automatisch alle Instanzen des Spitznamens eines Charakters durch seinen vollen Namen zu ersetzen, um sicherzustellen, dass die KI den richtigen Kontext hat.
+### Was kann kompaktiert werden?
 
+Die Kompaktierung kann diese Einträge aus einem ausgewählten **Memory Book** anzeigen:
 
-2. **Modifizieren der Antwort (Eingehender Text)**
-* **Zu verwendende Platzierung**: `AI Output`
-* **Was es tut**: Fängt die rohe Textantwort der KI ab, *bevor* sie geparst oder als Erinnerung gespeichert wird.
-* **Beispiel-Anwendungsfall**: Wenn dein KI-Modell oft wiederholende Phrasen wie *"As a large language model..."* in seinen Zusammenfassungen enthält, kannst du ein Regex-Skript erstellen, um diese Phrase automatisch aus jeder generierten Erinnerung zu entfernen.
+- Clip-Einträge
+- Side-Prompt-Tracker-Einträge
+- STMB-Erinnerungseinträge
 
+Normale Lorebook-Einträge, die nicht von STMB verwaltet werden, werden nicht angezeigt.
 
+### So verwendest du die Kompaktierung
 
-#### **Schnellstart-Beispiel: Bereinigen von KI-Antworten**
+1. Öffne das Memory-Books-Popup.
+2. Klicke auf **📝 Kompaktierung**.
+3. Wähle das **Memory Book**, das du prüfen möchtest. Wenn der aktuelle Chat bereits ein Memory Book hat, kann es automatisch ausgewählt sein.
+4. Wähle ein **Kompaktierungsprofil**. Damit wählst du, welche KI-Verbindung bzw. welches Modell den Eintrag umschreibt.
+5. Optional: Klicke auf **Kompaktierungs-Prompt bearbeiten**, wenn du die Umschreib-Anweisungen ändern möchtest.
+6. Suche den Eintrag in der Tabelle und klicke auf **Eintrag kompaktieren**.
+7. Prüfe das Ergebnis:
+   - **Originalinhalt** zeigt, was aktuell gespeichert ist.
+   - **Kompaktierter Entwurf** zeigt die KI-Umschreibung.
+   - Beide zeigen **Geschätzte Token**.
+8. Bearbeite den kompaktierten Entwurf bei Bedarf.
+9. Wähle eine Option:
+   - **Durch kompaktierte Version ersetzen**, um den Entwurf über dem ursprünglichen Eintrag zu speichern.
+   - **Kompaktierten Entwurf kopieren**, um ihn zu kopieren, ohne zu speichern.
+   - **Abbrechen**, um den Eintrag unverändert zu lassen.
 
-Nehmen wir an, dein KI-Modell fügt konsequent `(OOC: I hope this summary is helpful!)` zu seinen Erinnerungsgenerierungen hinzu. Hier ist, wie du es automatisch entfernen kannst:
+STMB sollte den Originaltext nie stillschweigend ersetzen. Wenn du nicht **Durch kompaktierte Version ersetzen** anklickst, bleibt der Lorebook-Eintrag unverändert.
 
-1. **Gehe zur Regex-Erweiterung**: Öffne das Hauptmenü der SillyTavern-Erweiterungen und gehe zu **Regex**.
-2. **Erstelle ein neues Skript**: Klicke auf "Open Regex Editor", um ein neues Regex-Skript zu erstellen.
-3. **Konfiguriere das Skript**:
-* **Script Name**: `Clean OOC Notes`
-* **Find Regex**: `/\\(OOC:.*?\\)/g` (Dies findet den Text "(OOC: ...)" und alles darin).
-* **Replace String**: Lasse dies leer, um den gefundenen Text zu löschen.
-* **Affects (Placement)**: Deaktiviere alle Kästchen außer **AI Output**. Dies ist der wichtigste Schritt!
-* **Aktiviere das Skript**: Stelle sicher, dass das Skript nicht deaktiviert ist.
+### Den Kompaktierungs-Prompt bearbeiten
 
+Der **Kompaktierungs-Prompt** steuert, wie die KI Einträge umschreibt. Der eingebaute Prompt ist absichtlich konservativ: wichtige Fakten, Namen, Pronomen, Makros, Wrapper-Überschriften und Endmarkierungen erhalten; Wiederholungen und Formulierungen mit geringem Nutzen entfernen; nichts erfinden.
 
-4. **Speichern und Fertig!**
+Der Prompt unterstützt diese Platzhalter:
 
-Jetzt, jedes Mal wenn ST Memory Books eine Antwort von der KI erhält, wird dieses Skript automatisch ausgeführt und den unerwünschten Text bereinigen, bevor die Erinnerung in deinem Lorebook gespeichert wird.
+- `{{ENTRY_CONTENT}}` — der aktuelle Inhalt des Eintrags. Dieser Platzhalter ist erforderlich; der Prompt-Editor warnt, wenn er fehlt.
+- `{{ENTRY_KIND}}` — die Art des Eintrags, zum Beispiel Clip, Side-Prompt oder Erinnerung.
+- `{{ENTRY_TITLE}}` — der Titel des Eintrags.
+
+Verwende **Auf Standard zurücksetzen**, wenn dein eigener Prompt nicht mehr gut funktioniert.
+
+### Gute Einsatzfälle
+
+Verwende die Kompaktierung für:
+
+- lange Clip-Einträge
+- Side-Prompt-Tracker, die sich mit der Zeit wiederholen
+- Erinnerungseinträge, die korrekt, aber aufgebläht sind
+- immer aktive Einträge, die zu viele Token kosten
+
+Verwende die Kompaktierung nicht für:
+
+- eine neue Erinnerung aus dem Chat erstellen
+- neue Fakten hinzufügen
+- fehlende Kontinuität reparieren, die nie im Eintrag stand
+- normale Lorebook-Einträge außerhalb von STMB bearbeiten
+
+Die Kompaktierung ist ein Aufräumwerkzeug, kein Werkzeug zur Erinnerungserstellung.
 
 ---
 
 ## ⚙️ Einstellungen, die wirklich wichtig sind
 
-Keine Sorge – du musst nicht alles konfigurieren! Hier sind die Einstellungen, die den größten Unterschied machen:
+Für die vollständige Referenz siehe [readme.md](readme.md).
 
-### 🎛️ **Auto-Summary Häufigkeit**
+Wichtige Basiskontrollen:
 
-* **20-30 Nachrichten**: Großartig für detaillierte, langsamere Chats
-* **40-60 Nachrichten**: Perfekt für schnellere, actiongeladene Gespräche
-* **80+ Nachrichten**: Für sehr schnelle Gruppenchats oder lockere Unterhaltungen
-
-### 📝 **Speicher-Vorschau (Memory Previews)**
-
-* Schalte dies EIN, um Erinnerungen zu überprüfen, bevor sie gespeichert werden
-* Du kannst bearbeiten, genehmigen oder neu generieren, falls die KI etwas Wichtiges übersehen hat
-* Empfohlen für wichtige Handlungsstränge
-
-### 🏷️ **Speicher-Titel**
-
-* Passe an, wie deine Erinnerungen benannt werden
-* Verwende `{{title}}` für KI-generierte Titel, `{{scene}}` für Nachrichtennummern
-* Beispiel: `"Chapter {{title}} ({{scene}})"` wird zu `"Chapter The Great Escape (Scene 45-67)"`
-
-### 📚 **Speicher-Sammlungen** (Lorebooks)
-
-* **Auto-Modus**: Verwendet die Standard-Speichersammlung deines Chats (am einfachsten)
-* **Manueller Modus**: Wähle eine spezifische Sammlung für jeden Chat (zur Organisation)
-* **Automatisch erstellen**: Erstellt automatisch neue Sammlungen (gut für neue Charaktere)
+* **Aktuelle SillyTavern Einstellungen** verwendet deine aktive ST-Verbindung direkt
+* **Eigenes STMB-Profil anlegen** ermöglicht dir, STMB anzupassen, zum Beispiel ein anderes/günstigeres Modell für Erinnerungen als für Rollenspiel zu verwenden
+* **Automatische Erinnerungs-Zusammenfassungen erstellen** schaltet automatische Erinnerungen ein
+* **Intervall für automatische Zusammenfassung** und **Puffer für automatische Zusammenfassung** steuern den Zeitpunkt
+* **Ausblenden / Einblenden von Nachrichten** hilft beim Tokensparen
+* **Manuellen Lorebook-Modus aktivieren** und **Lorebook automatisch erstellen, falls keines existiert** bestimmen, wohin Erinnerungen geschrieben werden
+* **Erinnerungsvorschauen anzeigen** lässt dich KI-Ausgaben vor dem Speichern prüfen oder bearbeiten
+* **Side-Prompts** aktiviert Tracker
+* **Bei erreichter Ebene zur Konsolidierung auffordern** zeigt Konsolidierung nur als Bestätigung
 
 ---
 
 ## 🔧 Fehlerbehebung (Wenn Dinge nicht funktionieren)
 
-### "Ich sehe die Memory Books Option nicht!"
+Für die vollständige Liste siehe [readme.md](readme.md).
 
-* Prüfe, ob die Erweiterung installiert und aktiviert ist
-* Suche nach dem Zauberstab-Symbol (🪄) neben deiner Chat-Eingabe
-* Versuche, die Seite neu zu laden
+Schnelle Checks:
 
-### "Die Pfeiltasten (► ◄) werden nicht angezeigt!"
-
-* Warte 3-5 Sekunden nach dem Laden eines Chats – sie brauchen Zeit, um zu erscheinen
-* Wenn sie immer noch fehlen, lade die Seite neu
-* Stelle sicher, dass ST Memory Books in den Erweiterungen aktiviert ist
-
-### "Auto Summary funktioniert nicht!"
-
-* Überprüfe doppelt, ob "Auto-Summary" in den Memory Books Einstellungen aktiviert ist
-* Wurde das Nachrichtenintervall erreicht? Auto-Summary wartet auf genügend neue Nachrichten
-* Wenn du Auto-Summary aufgeschoben hast, wartet es vielleicht bis zu einer bestimmten Nachrichtenanzahl
-* Auto-Summary verarbeitet nur neue Nachrichten seit der *letzten* Erinnerung. Wenn du alte Erinnerungen gelöscht hast, geht es nicht zurück.
-
-### "Ich erhalte Fehler über fehlende Lorebooks!"
-
-* Gehe zu den Memory Books Einstellungen
-* Binde entweder ein Lorebook an deinen Chat (Automatischer Modus) oder aktiviere "Auto-create lorebook if none exists" (Lorebook automatisch erstellen, falls keines existiert)
-
-### "Manchmal schlägt es ohne Grund fehl!"
-
-* Stelle sicher, dass deine Max Response Length (in den SillyTavern-Presets) auf eine ausreichend große Zahl eingestellt ist. Aiko empfiehlt mindestens 2000 Tokens (Aiko verwendet 4000).
-* Die Fehlermeldungen sind jetzt detaillierter, aber wenn du immer noch Probleme hast, kontaktiere bitte Aiko auf Github oder Discord.
-
-### "Meine benutzerdefinierten Prompts funktionieren nicht richtig!"
-
-* Überprüfe den "Summary Prompt Manager" in den Memory Books Einstellungen
-* Stelle sicher, dass dein Prompt die KI anweist, im **JSON-Format** zu antworten (z.B. `{ "title": "...", "content": "..." }`)
+* STMB muss aktiviert sein und der Eintrag **Memory Books** muss im Erweiterungsmenü erscheinen
+* Wenn Auto-Summary nicht läuft, brauchst du zuerst eine manuelle Erinnerung als Startpunkt und deine Intervall-/Pufferwerte sollten sinnvoll sein
+* Wenn keine Erinnerungen gespeichert werden, muss ein Lorebook gebunden sein oder **Lorebook automatisch erstellen, falls keines existiert** aktiviert sein
+* Wenn Erinnerungen nicht ausgelöst werden, muss **Delay until recursion** deaktiviert sein
+* Wenn Regex seltsam wirkt, prüfe die Auswahl in **📐 Regex konfigurieren…**
+* Wenn Konsolidierung nicht erscheint, prüfe, ob **Bei erreichter Ebene zur Konsolidierung auffordern** aktiviert ist und ob die Zielstufe in **Auto-Konsolidierungsstufen:** enthalten ist
 
 ---
 
@@ -389,7 +842,7 @@ Keine Sorge – du musst nicht alles konfigurieren! Hier sind die Einstellungen,
 
 * **Detailliertere Infos:** [readme.md](readme.md)
 * **Neueste Updates:** [changelog.md](changelog.md)
-* **Alte Lorebooks konvertieren:** [lorebookconverter.html](https://www.google.com/search?q=lorebookconverter.html)
+* **Alte Lorebooks konvertieren:** [lorebookconverter.html](../resources/lorebookconverter.html)
 * **Community-Support:** Tritt der SillyTavern-Community auf Discord bei! (Suche nach dem 📕ST Memory Books Thread oder schreibe @tokyoapple eine DM für direkte Hilfe.)
 * **Bugs/Features:** Einen Fehler gefunden oder eine tolle Idee? Eröffne ein GitHub-Issue in diesem Repository.
 

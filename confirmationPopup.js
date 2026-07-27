@@ -1,24 +1,18 @@
+// Copyright (C) 2024–2026 Aiko Hanasaki
+// SPDX-License-Identifier: AGPL-3.0-only
+
 import { saveSettingsDebounced } from '../../../../script.js';
 import { Popup, POPUP_TYPE, POPUP_RESULT } from '../../../popup.js';
 import { DOMPurify } from '../../../../lib.js';
-import { simpleConfirmationTemplate, advancedOptionsTemplate, memoryPreviewTemplate } from './templates.js';
+import { simpleConfirmationTemplate, advancedOptionsTemplate, memoryPreviewTemplate, consolidationPreviewTemplate } from './templates.js';
 import { translate } from '../../../i18n.js';
 import { loadWorldInfo } from '../../../world-info.js';
 import { identifyMemoryEntries } from './addlore.js';
-import { createProfileObject, getUIModelSettings, getCurrentApiInfo, getEffectivePrompt, generateSafeProfileName, getEffectiveLorebookName } from './utils.js';
+import { tr } from './i18nHelpers.js';
+import { createProfileObject, getUIModelSettings, getCurrentApiInfo, getEffectivePrompt, generateSafeProfileName, getEffectiveLorebookName, markStmbPopup } from './utils.js';
 import { playMessageSound } from '../../../power-user.js';
 
 const MODULE_NAME = 'STMemoryBooks-ConfirmationPopup';
-
-// Helper: keyed translation with Mustache-style interpolation using ST translate()
-function tr(key, fallback, params) {
-  const localized = translate(fallback, key);
-  if (!params) return localized;
-  return localized.replace(/{{\s*(\w+)\s*}}/g, (m, p1) => {
-    const v = params[p1];
-    return v !== undefined && v !== null ? String(v) : '';
-  });
-}
 
 // Define semantic mappings for custom popup results using SillyTavern's provided constants
 const STMB_POPUP_RESULTS = {
@@ -27,6 +21,25 @@ const STMB_POPUP_RESULTS = {
   EDIT: POPUP_RESULT.CUSTOM3,
   RETRY: POPUP_RESULT.CUSTOM4
 };
+
+const activeMemoryPreviewPopups = new Set();
+
+export function closeActiveMemoryPreviewPopups() {
+  for (const popup of Array.from(activeMemoryPreviewPopups)) {
+    try {
+      if (typeof popup?.completeCancelled === 'function') {
+        popup.completeCancelled();
+        continue;
+      }
+    } catch {}
+
+    try {
+      if (popup?.dlg?.open && typeof popup.dlg.close === 'function') {
+        popup.dlg.close();
+      }
+    } catch {}
+  }
+}
 
 /**
  * Plays the messagePopupSound in a safe manner, not blocking anything else if the playback fails
@@ -43,7 +56,7 @@ function safePlayMessageSound() {
 /**
  * Show simplified confirmation popup for memory creation
  */
-export async function showConfirmationPopup(sceneData, settings, currentModelSettings, currentApiInfo, chat_metadata, selectedProfileIndex = null) {
+export async function showConfirmationPopup(sceneData, settings, currentModelSettings, currentApiInfo, chat_metadata, selectedProfileIndex = null, options = {}) {
   const profileIndex = selectedProfileIndex !== null ? selectedProfileIndex : settings.defaultProfile;
   const selectedProfile = settings.profiles[profileIndex];
   const effectivePrompt = await getEffectivePrompt(selectedProfile);
@@ -88,8 +101,11 @@ export async function showConfirmationPopup(sceneData, settings, currentModelSet
         }
       ]
     });
+    markStmbPopup(popup);
 
+    activeMemoryPreviewPopups.add(popup);
     const result = await popup.show();
+    activeMemoryPreviewPopups.delete(popup);
 
     if (result === POPUP_RESULT.AFFIRMATIVE) {
       return {
@@ -110,7 +126,8 @@ export async function showConfirmationPopup(sceneData, settings, currentModelSet
         selectedProfile,
         currentModelSettings,
         currentApiInfo,
-        chat_metadata
+        chat_metadata,
+        options,
       );
       return advancedResult;
     }
@@ -125,9 +142,11 @@ export async function showConfirmationPopup(sceneData, settings, currentModelSet
 /**
  * Show advanced options popup for memory creation
  */
-export async function showAdvancedOptionsPopup(sceneData, settings, selectedProfile, currentModelSettings, currentApiInfo, chat_metadata) {
+export async function showAdvancedOptionsPopup(sceneData, settings, selectedProfile, currentModelSettings, currentApiInfo, chat_metadata, options = {}) {
   // Get available memories count
-  const availableMemories = await getAvailableMemoriesCount(settings, chat_metadata);
+  const availableMemories = Number.isFinite(Number(options.availableMemories))
+    ? Math.max(0, Math.trunc(Number(options.availableMemories)))
+    : await getAvailableMemoriesCount(settings, chat_metadata);
 
   const effectivePrompt = await getEffectivePrompt(selectedProfile);
   const profileModel = selectedProfile.connection?.model || translate('Current SillyTavern model', 'STMemoryBooks_Label_CurrentSTModel');
@@ -175,9 +194,10 @@ export async function showAdvancedOptionsPopup(sceneData, settings, selectedProf
         }
       ]
     });
+    markStmbPopup(popup);
 
     // Set up event listeners BEFORE popup is shown
-    setupAdvancedOptionsListeners(popup, sceneData, settings, selectedProfile, chat_metadata);
+    setupAdvancedOptionsListeners(popup, sceneData, settings, selectedProfile, chat_metadata, options);
 
     const result = await popup.show();
 
@@ -205,7 +225,7 @@ async function handleAdvancedConfirmation(popup, settings) {
   const overrideSettings = popupElement.querySelector('#stmb-override-settings-advanced')?.checked || false;
 
   // Check if settings should be saved as new profile (when button text indicates it)
-  const createButton = popup.dlg.querySelector('.popup_button_ok');
+  const createButton = popup.okButton;
   const shouldSaveProfile = createButton?.dataset.shouldSave === 'true';
 
   if (shouldSaveProfile) {
@@ -280,7 +300,7 @@ async function handleSaveNewProfile(popup, settings) {
 /**
  * Setup event listeners for advanced options popup - Enhanced with dynamic button text
  */
-function setupAdvancedOptionsListeners(popup, sceneData, settings, selectedProfile, chat_metadata) {
+function setupAdvancedOptionsListeners(popup, sceneData, settings, selectedProfile, chat_metadata, options = {}) {
   const popupElement = popup.dlg;
 
   // Track original settings for comparison
@@ -306,7 +326,7 @@ function setupAdvancedOptionsListeners(popup, sceneData, settings, selectedProfi
     const saveSection = popupElement.querySelector('#stmb-save-profile-section-advanced');
 
     // Update button text based on whether settings have changed
-    const createButton = popup.dlg.querySelector('.popup_button_ok');
+    const createButton = popup.okButton;
     if (createButton) {
       if (hasChanges) {
         createButton.textContent = translate('Save Profile & Create Memory', 'STMemoryBooks_SaveProfileAndCreateMemory');
@@ -357,7 +377,7 @@ function setupAdvancedOptionsListeners(popup, sceneData, settings, selectedProfi
   });
 
   // Enhanced token estimation with context memories
-  setupTokenEstimation(popupElement, sceneData, settings, chat_metadata, checkForChanges);
+  setupTokenEstimation(popupElement, sceneData, settings, chat_metadata, checkForChanges, options);
 
   // Initial button text check
   checkForChanges();
@@ -366,7 +386,7 @@ function setupAdvancedOptionsListeners(popup, sceneData, settings, selectedProfi
 /**
  * Setup token estimation functionality
  */
-function setupTokenEstimation(popupElement, sceneData, settings, chat_metadata, checkForChanges) {
+function setupTokenEstimation(popupElement, sceneData, settings, chat_metadata, checkForChanges, options = {}) {
   const summaryCountSelect = popupElement.querySelector('#stmb-context-memories-advanced');
   const totalTokensDisplay = popupElement.querySelector('#stmb-total-tokens-display');
   const tokenWarning = popupElement.querySelector('#stmb-token-warning-advanced');
@@ -390,7 +410,10 @@ function setupTokenEstimation(popupElement, sceneData, settings, chat_metadata, 
       if (!cachedMemories[memoryCount]) {
         totalTokensDisplay.textContent = translate('Total tokens: Calculating...', 'STMemoryBooks_Label_TotalTokensCalculating');
 
-        const memoryFetchResult = await fetchPreviousSummaries(memoryCount, settings, chat_metadata);
+        const fetchSummaries = typeof options.fetchPreviousSummaries === 'function'
+          ? options.fetchPreviousSummaries
+          : count => fetchPreviousSummaries(count, settings, chat_metadata);
+        const memoryFetchResult = await fetchSummaries(memoryCount);
         cachedMemories[memoryCount] = memoryFetchResult.summaries;
       }
 
@@ -474,6 +497,9 @@ export async function fetchPreviousSummaries(count, settings, chat_metadata) {
   }
 
   try {
+    // Intentionally do not use the shared interactive lorebook validator here.
+    // This is a passive preview helper, so missing lorebooks should degrade to
+    // empty results instead of launching recovery UI.
     const lorebookName = await getEffectiveLorebookName();
     if (!lorebookName) {
       return { summaries: [], actualCount: 0, requestedCount: count };
@@ -537,6 +563,9 @@ export async function calculateTokensWithContext(sceneData, memories) {
  */
 async function getAvailableMemoriesCount(settings, chat_metadata) {
   try {
+    // Intentionally do not use the shared interactive lorebook validator here.
+    // This is a passive count helper, so missing lorebooks should read as 0
+    // instead of interrupting the user with recovery prompts.
     const lorebookName = await getEffectiveLorebookName();
     if (!lorebookName) {
       return 0;
@@ -582,6 +611,7 @@ export async function confirmSaveNewProfile(profileName) {
  * @returns {Promise<Object>} Result object with action and optional edited memory data
  */
 export async function showMemoryPreviewPopup(memoryResult, sceneData, profileSettings, options = {}) {
+  let popup = null;
   try {
     // Input validation
     if (!memoryResult || typeof memoryResult !== 'object') {
@@ -637,7 +667,7 @@ export async function showMemoryPreviewPopup(memoryResult, sceneData, profileSet
     // Play notification sound when popup appears
     safePlayMessageSound();
 
-    const popup = new Popup(content, POPUP_TYPE.TEXT, '', {
+    popup = new Popup(content, POPUP_TYPE.TEXT, '', {
       okButton: translate('Edit & Save', 'STMemoryBooks_EditAndSave'),
       cancelButton: translate('Cancel', 'STMemoryBooks_Cancel'),
       allowVerticalScrolling: true,
@@ -651,7 +681,9 @@ export async function showMemoryPreviewPopup(memoryResult, sceneData, profileSet
         }
       ]
     });
+    markStmbPopup(popup);
 
+    activeMemoryPreviewPopups.add(popup);
     const result = await popup.show();
 
     switch (result) {
@@ -740,5 +772,351 @@ export async function showMemoryPreviewPopup(memoryResult, sceneData, profileSet
     return {
       action: 'cancel'
     };
+  } finally {
+    if (popup) {
+      activeMemoryPreviewPopups.delete(popup);
+    }
+  }
+}
+
+function previewKeywordsToString(keywords) {
+  if (Array.isArray(keywords)) {
+    return keywords.filter(k => k && typeof k === 'string').join(', ');
+  }
+  if (typeof keywords === 'string') {
+    return keywords.trim();
+  }
+  return '';
+}
+
+function parsePreviewKeywords(keywordText) {
+  if (!keywordText || typeof keywordText !== 'string') {
+    return [];
+  }
+  return keywordText
+    .split(',')
+    .map(k => k.trim())
+    .filter(k => k.length > 0 && typeof k === 'string');
+}
+
+function escapeReviewValue(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
+ * Mandatory before/after review for replacing an existing lorebook entry.
+ */
+export async function showRegenerationReviewPopup({
+  originalEntry,
+  generatedTitle,
+  generatedContent,
+  generatedKeywords,
+  formatTitle,
+  linkedLorebooks = [],
+} = {}) {
+  let popup = null;
+  try {
+    const originalKeywords = previewKeywordsToString(originalEntry?.key);
+    const afterKeywords = previewKeywordsToString(generatedKeywords);
+    const initialFinalTitle = typeof formatTitle === 'function'
+      ? formatTitle(generatedTitle)
+      : generatedTitle;
+    const linkedNames = Array.from(new Set(
+      (Array.isArray(linkedLorebooks) ? linkedLorebooks : [])
+        .map(name => String(name || '').trim())
+        .filter(Boolean),
+    ));
+    const linkedWarning = linkedNames.length > 0
+      ? `
+        <div class="stmb-regeneration-linked-warning">
+          <strong>${escapeReviewValue(translate('Linked copies will not be updated', 'STMemoryBooks_Regeneration_LinkedWarningTitle'))}</strong>
+          <div>${escapeReviewValue(translate('Approval replaces only the clicked entry. The following linked lorebooks are unchanged:', 'STMemoryBooks_Regeneration_LinkedWarningBody'))}</div>
+          <div>${escapeReviewValue(linkedNames.join(', '))}</div>
+        </div>`
+      : '';
+    const content = DOMPurify.sanitize(`
+      <div class="stmb-regeneration-review">
+        <p>${escapeReviewValue(translate('Review the original and regenerated entry. Approval is required before anything is overwritten.', 'STMemoryBooks_Regeneration_ReviewDescription'))}</p>
+        ${linkedWarning}
+        <div class="stmb-regeneration-columns">
+          <section class="stmb-regeneration-column">
+            <h3>${escapeReviewValue(translate('Before', 'STMemoryBooks_Regeneration_Before'))}</h3>
+            <label>${escapeReviewValue(translate('Title', 'STMemoryBooks_Regeneration_Title'))}</label>
+            <input class="text_pole" value="${escapeReviewValue(originalEntry?.comment)}" readonly>
+            <label>${escapeReviewValue(translate('Content', 'STMemoryBooks_Regeneration_Content'))}</label>
+            <textarea class="text_pole stmb-regeneration-content" readonly>${escapeReviewValue(originalEntry?.content)}</textarea>
+            <label>${escapeReviewValue(translate('Keywords', 'STMemoryBooks_Regeneration_Keywords'))}</label>
+            <input class="text_pole" value="${escapeReviewValue(originalKeywords)}" readonly>
+          </section>
+          <section class="stmb-regeneration-column">
+            <h3>${escapeReviewValue(translate('After', 'STMemoryBooks_Regeneration_After'))}</h3>
+            <label for="stmb-regeneration-title">${escapeReviewValue(translate('Semantic title', 'STMemoryBooks_Regeneration_SemanticTitle'))}</label>
+            <input id="stmb-regeneration-title" class="text_pole" value="${escapeReviewValue(generatedTitle)}">
+            <label for="stmb-regeneration-final-title">${escapeReviewValue(translate('Final formatted title', 'STMemoryBooks_Regeneration_FinalTitle'))}</label>
+            <input id="stmb-regeneration-final-title" class="text_pole" value="${escapeReviewValue(initialFinalTitle)}" readonly>
+            <label for="stmb-regeneration-content">${escapeReviewValue(translate('Content', 'STMemoryBooks_Regeneration_Content'))}</label>
+            <textarea id="stmb-regeneration-content" class="text_pole stmb-regeneration-content">${escapeReviewValue(generatedContent)}</textarea>
+            <label for="stmb-regeneration-keywords">${escapeReviewValue(translate('Keywords', 'STMemoryBooks_Regeneration_Keywords'))}</label>
+            <input id="stmb-regeneration-keywords" class="text_pole" value="${escapeReviewValue(afterKeywords)}">
+          </section>
+        </div>
+      </div>
+    `);
+
+    safePlayMessageSound();
+    popup = new Popup(content, POPUP_TYPE.TEXT, '', {
+      okButton: translate('Approve replacement', 'STMemoryBooks_Regeneration_Approve'),
+      cancelButton: translate('Cancel', 'STMemoryBooks_Cancel'),
+      allowVerticalScrolling: true,
+      wide: true,
+      large: true,
+    });
+    markStmbPopup(popup);
+
+    const titleInput = popup.dlg?.querySelector('#stmb-regeneration-title');
+    const finalTitleInput = popup.dlg?.querySelector('#stmb-regeneration-final-title');
+    const contentInput = popup.dlg?.querySelector('#stmb-regeneration-content');
+    const validateReview = () => {
+      const hasTitle = Boolean(titleInput?.value?.trim());
+      const hasContent = Boolean(contentInput?.value?.trim());
+      const isValid = hasTitle && hasContent;
+
+      if (popup.okButton) {
+        popup.okButton.classList.toggle('disabled', !isValid);
+        popup.okButton.setAttribute('aria-disabled', String(!isValid));
+      }
+
+      return { hasTitle, hasContent, isValid };
+    };
+
+    titleInput?.addEventListener('input', () => {
+      if (finalTitleInput) {
+        finalTitleInput.value = typeof formatTitle === 'function'
+          ? formatTitle(titleInput.value)
+          : titleInput.value;
+      }
+      validateReview();
+    });
+    contentInput?.addEventListener('input', validateReview);
+    popup.onClosing = closingPopup => {
+      if (closingPopup.result !== POPUP_RESULT.AFFIRMATIVE) {
+        return true;
+      }
+
+      const validation = validateReview();
+      if (validation.isValid) {
+        return true;
+      }
+
+      if (!validation.hasTitle) {
+        toastr.error(translate('Memory title cannot be empty', 'STMemoryBooks_Toast_TitleCannotBeEmpty'), 'STMemoryBooks');
+        titleInput?.focus();
+      } else {
+        toastr.error(translate('Memory content cannot be empty', 'STMemoryBooks_Toast_ContentCannotBeEmpty'), 'STMemoryBooks');
+        contentInput?.focus();
+      }
+
+      return false;
+    };
+    validateReview();
+
+    activeMemoryPreviewPopups.add(popup);
+    const result = await popup.show();
+    if (result !== POPUP_RESULT.AFFIRMATIVE || !popup.dlg) {
+      return { action: 'cancel' };
+    }
+
+    const semanticTitle = popup.dlg.querySelector('#stmb-regeneration-title')?.value?.trim() || '';
+    const editedContent = popup.dlg.querySelector('#stmb-regeneration-content')?.value?.trim() || '';
+    const keywordsText = popup.dlg.querySelector('#stmb-regeneration-keywords')?.value?.trim() || '';
+    if (!semanticTitle) {
+      toastr.error(translate('Memory title cannot be empty', 'STMemoryBooks_Toast_TitleCannotBeEmpty'), 'STMemoryBooks');
+      return { action: 'cancel' };
+    }
+    if (!editedContent) {
+      toastr.error(translate('Memory content cannot be empty', 'STMemoryBooks_Toast_ContentCannotBeEmpty'), 'STMemoryBooks');
+      return { action: 'cancel' };
+    }
+
+    return {
+      action: 'replace',
+      semanticTitle,
+      formattedTitle: typeof formatTitle === 'function'
+        ? formatTitle(semanticTitle)
+        : semanticTitle,
+      content: editedContent,
+      keywords: parsePreviewKeywords(keywordsText),
+    };
+  } catch (error) {
+    console.error(`${MODULE_NAME}: Error showing regeneration review popup:`, error);
+    return { action: 'cancel' };
+  } finally {
+    if (popup) activeMemoryPreviewPopups.delete(popup);
+  }
+}
+
+function truncatePreviewText(text, maxLength = 180) {
+  const value = String(text || '').replace(/\s+/g, ' ').trim();
+  if (value.length <= maxLength) return value;
+  return `${value.slice(0, maxLength - 3)}...`;
+}
+
+/**
+ * Show consolidation preview popup for one generated summary batch.
+ * Users can edit title/content/keywords, but source memberIds are read-only.
+ */
+export async function showConsolidationPreviewPopup({
+  summaryCandidates,
+  selectedEntries,
+  targetLabel = 'Summary',
+  sourceLabel = 'Memory',
+  ambiguousAssignments = false,
+  lockedCount = 0,
+  pendingCount = 0,
+} = {}) {
+  let popup = null;
+  try {
+    const candidates = Array.isArray(summaryCandidates) ? summaryCandidates : [];
+    const sources = Array.isArray(selectedEntries) ? selectedEntries : [];
+    if (candidates.length === 0) {
+      return { action: 'cancel' };
+    }
+
+    const sourceMap = new Map(
+      sources
+        .filter(entry => entry && entry.uid !== undefined && entry.uid !== null)
+        .map(entry => [String(entry.uid), entry]),
+    );
+    const allowIndividualActions = !ambiguousAssignments;
+    const templateData = {
+      ambiguousAssignments,
+      allowIndividualActions,
+      lockedCount,
+      pendingCount,
+      summaries: candidates.map((candidate, index) => {
+        const memberIds = Array.isArray(candidate?.memberIds)
+          ? candidate.memberIds.map(id => String(id))
+          : [];
+        return {
+          index,
+          displayNumber: index + 1,
+          tierLabel: targetLabel,
+          title: String(candidate?.title || '').trim(),
+          summary: String(candidate?.summary || '').trim(),
+          keywordsText: previewKeywordsToString(candidate?.keywords),
+          sources: memberIds.map(id => {
+            const entry = sourceMap.get(String(id));
+            return {
+              id,
+              title: String(entry?.comment || entry?.title || `${sourceLabel} ${id}`).trim(),
+              excerpt: truncatePreviewText(entry?.content || ''),
+            };
+          }),
+        };
+      }),
+    };
+
+    const content = DOMPurify.sanitize(consolidationPreviewTemplate(templateData));
+    safePlayMessageSound();
+
+    popup = new Popup(content, POPUP_TYPE.TEXT, '', {
+      okButton: ambiguousAssignments
+        ? translate('Save Entire Batch', 'STMemoryBooks_ConsolidationPreview_SaveEntireBatch')
+        : translate('Finish Review and Save', 'STMemoryBooks_ConsolidationPreview_ApplySelections'),
+      cancelButton: translate('Cancel', 'STMemoryBooks_Cancel'),
+      allowVerticalScrolling: true,
+      wide: true,
+      large: true,
+      customButtons: [
+        {
+          text: translate('Regenerate Batch', 'STMemoryBooks_ConsolidationPreview_RegenerateBatch'),
+          result: STMB_POPUP_RESULTS.RETRY,
+          classes: ['menu_button', 'whitespacenowrap'],
+          action: null,
+        },
+      ],
+    });
+    markStmbPopup(popup);
+
+    activeMemoryPreviewPopups.add(popup);
+    const result = await popup.show();
+
+    if (result === STMB_POPUP_RESULTS.RETRY) {
+      return { action: 'retryAll' };
+    }
+    if (result !== POPUP_RESULT.AFFIRMATIVE) {
+      return { action: 'cancel' };
+    }
+
+    const popupElement = popup.dlg;
+    if (!popupElement) {
+      toastr.error(
+        translate('Unable to read edited values', 'STMemoryBooks_Toast_UnableToReadEditedValues'),
+        translate('STMemoryBooks', 'confirmationPopup.toast.title'),
+      );
+      return { action: 'cancel' };
+    }
+
+    const acceptedCandidates = [];
+    const rejectedCandidates = [];
+    for (const card of Array.from(popupElement.querySelectorAll('.stmb-consolidation-preview-card'))) {
+      const index = Number(card.dataset.summaryIndex);
+      const original = candidates[index];
+      if (!original) continue;
+
+      const title = card.querySelector('.stmb-consolidation-preview-title')?.value?.trim() || '';
+      const summary = card.querySelector('.stmb-consolidation-preview-content')?.value?.trim() || '';
+      const keywordsText = card.querySelector('.stmb-consolidation-preview-keywords')?.value?.trim() || '';
+      if (!title) {
+        toastr.error(
+          translate('Summary title cannot be empty', 'STMemoryBooks_ConsolidationPreview_TitleRequired'),
+          'STMemoryBooks',
+        );
+        return { action: 'cancel' };
+      }
+      if (!summary) {
+        toastr.error(
+          translate('Summary content cannot be empty', 'STMemoryBooks_ConsolidationPreview_ContentRequired'),
+          'STMemoryBooks',
+        );
+        return { action: 'cancel' };
+      }
+
+      const editedCandidate = {
+        ...original,
+        title,
+        summary,
+        keywords: parsePreviewKeywords(keywordsText),
+        memberIds: Array.isArray(original.memberIds)
+          ? original.memberIds.map(id => String(id))
+          : [],
+      };
+      const action = ambiguousAssignments
+        ? 'accept'
+        : card.querySelector(`input[name="stmb-consolidation-action-${index}"]:checked`)?.value || 'accept';
+      if (action === 'reject') {
+        rejectedCandidates.push(editedCandidate);
+      } else {
+        acceptedCandidates.push(editedCandidate);
+      }
+    }
+
+    return {
+      action: 'apply',
+      acceptedCandidates,
+      rejectedCandidates,
+    };
+  } catch (error) {
+    console.error(`${MODULE_NAME}: Error showing consolidation preview popup:`, error);
+    return { action: 'cancel' };
+  } finally {
+    if (popup) {
+      activeMemoryPreviewPopups.delete(popup);
+    }
   }
 }

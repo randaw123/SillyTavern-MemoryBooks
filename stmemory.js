@@ -1,13 +1,52 @@
-import { getEffectivePrompt, getCurrentApiInfo, normalizeCompletionSource, estimateTokens } from './utils.js';
+// Copyright (C) 2024–2026 Aiko Hanasaki
+// SPDX-License-Identifier: AGPL-3.0-only
+
+import { getEffectivePrompt, getCurrentApiInfo, normalizeCompletionSource, estimateTokens, isStmbStopError, StmbCancelledError, normalizeAdditionalContextEntries } from './utils.js';
 import { characters, this_chid, substituteParams, getRequestHeaders } from '../../../../script.js';
-import { oai_settings } from '../../../openai.js';
+import { getStreamingReply, oai_settings, ZAI_ENDPOINT } from '../../../openai.js';
+import EventSourceStream from '../../../sse-stream.js';
 import { runRegexScript, getRegexScripts } from '../../../extensions/regex/engine.js';
 import { groups } from '../../../group-chats.js';
-import { extension_settings } from '../../../extensions.js';
+import { extension_settings, getContext } from '../../../extensions.js';
+import { translate } from '../../../i18n.js';
 import dirtyJson from 'dirty-json';
+import { getSceneMarkers } from './sceneManager.js';
+import {
+    CONTEXT_NONE_KEY,
+    getContextSetting,
+    resolveContextSettingEntries,
+    resolveContextSettingEntriesFromRefs,
+} from './contextSettingsManager.js';
 const $ = window.jQuery;
 
 const MODULE_NAME = 'STMemoryBooks-Memory';
+let hasWarnedMissingChatCompletionService = false;
+
+const MEMORY_RESPONSE_JSON_SCHEMA = Object.freeze({
+    name: 'stmb_memory',
+    description: 'A generated Memory Books lorebook memory.',
+    strict: true,
+    value: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['content', 'title', 'keywords'],
+        properties: {
+            content: {
+                type: 'string',
+                description: 'The memory content to save in the lorebook.',
+            },
+            title: {
+                type: 'string',
+                description: 'A short title for the memory.',
+            },
+            keywords: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Activation keywords for the memory.',
+            },
+        },
+    },
+});
 
 // --- ST Regex selection-based execution (bypass engine gating) ---
 
@@ -29,7 +68,7 @@ function cloneScriptEnabled(script) {
  * Uses getRegexScripts({ allowedOnly: false }) as the single source of truth.
  * Bypasses engine gating; relies on explicit user selection.
  */
-function applySelectedRegex(inputText, selectedKeys) {
+export function applySelectedRegex(inputText, selectedKeys) {
     if (typeof inputText !== 'string') return '';
     if (!Array.isArray(selectedKeys) || selectedKeys.length === 0) return inputText;
 
@@ -83,6 +122,286 @@ function getCurrentCompletionEndpoint() {
     return '/api/backends/chat-completions/generate';
 }
 
+const PROXY_SUPPORTED_COMPLETION_SOURCES = new Set([
+    'claude',
+    'openai',
+    'mistralai',
+    'makersuite',
+    'vertexai',
+    'deepseek',
+    'xai',
+    'zai',
+    'moonshot',
+]);
+
+function shouldForwardReverseProxy(api, reverseProxy) {
+    return !!reverseProxy && !!oai_settings?.reverse_proxy && PROXY_SUPPORTED_COMPLETION_SOURCES.has(api);
+}
+
+function extractStructuredToolInput(contentBlocks) {
+    if (!Array.isArray(contentBlocks)) {
+        return '';
+    }
+
+    const toolUseInput = contentBlocks.find(block =>
+        block && typeof block === 'object' && block.type === 'tool_use' && block.input && typeof block.input === 'object',
+    )?.input;
+
+    if (!toolUseInput) {
+        return '';
+    }
+
+    try {
+        return JSON.stringify(toolUseInput);
+    } catch {
+        return '';
+    }
+}
+
+function extractChatMessageText(message) {
+    if (!message || typeof message !== 'object') {
+        return '';
+    }
+
+    const content = message.content;
+    if (typeof content === 'string') {
+        return content;
+    }
+
+    const toolUseJson = extractStructuredToolInput(content);
+    if (toolUseJson) {
+        return toolUseJson;
+    }
+
+    if (Array.isArray(content)) {
+        return content
+            .map(block => typeof block?.text === 'string' ? block.text : '')
+            .join('');
+    }
+
+    return '';
+}
+
+function extractCompletionText(data) {
+    const messageText = extractChatMessageText(data?.choices?.[0]?.message);
+    if (messageText) {
+        return messageText;
+    }
+
+    if (data?.completion) {
+        return data.completion;
+    }
+
+    if (data?.choices?.[0]?.text) {
+        return data.choices[0].text;
+    }
+
+    if (data?.content && Array.isArray(data.content)) {
+        return extractStructuredToolInput(data.content)
+            || data.content
+                .map(block => typeof block?.text === 'string' ? block.text : '')
+                .join('');
+    }
+
+    if (typeof data?.content === 'string') {
+        return data.content;
+    }
+
+    return '';
+}
+
+function isEventStreamResponse(response) {
+    return String(response?.headers?.get('content-type') || '').toLowerCase().includes('text/event-stream');
+}
+
+function looksLikeSsePayload(text) {
+    return /^\s*(?:event|data|id|retry)\s*:/m.test(String(text || ''));
+}
+
+function getStreamingFinishReason(data) {
+    return data?.choices?.[0]?.finish_reason
+        || data?.choices?.[0]?.finishReason
+        || data?.finish_reason
+        || data?.stop_reason
+        || null;
+}
+
+function makeStreamingParseError(message, rawEvent, cause = null) {
+    const err = new Error(message);
+    err.name = 'StreamingResponseParseError';
+    err.rawResponse = rawEvent;
+    if (cause) {
+        err.cause = cause;
+    }
+    return err;
+}
+
+function makeSyntheticStreamingResponse(text, lastEvent, lastRawEvent, finishReason) {
+    return {
+        choices: [
+            {
+                index: 0,
+                message: {
+                    role: 'assistant',
+                    content: text,
+                },
+                finish_reason: finishReason || null,
+            },
+        ],
+        stmb_streaming: {
+            source: 'sse',
+            finish_reason: finishReason || null,
+            last_event: lastEvent || null,
+            last_raw_event: lastRawEvent || '',
+        },
+    };
+}
+
+async function parseSseCompletionResponseBody(body, api) {
+    if (!body) {
+        throw makeStreamingParseError('Streaming response did not include a readable body.', '');
+    }
+
+    const eventStream = new EventSourceStream();
+    const reader = body.pipeThrough(eventStream).getReader();
+    const state = { reasoning: '', images: [], signature: '', toolSignatures: {} };
+    let text = '';
+    let lastEvent = null;
+    let lastRawEvent = '';
+    let finishReason = null;
+
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+                break;
+            }
+
+            const rawData = String(value?.data || '');
+            lastRawEvent = rawData;
+            if (rawData === '[DONE]') {
+                break;
+            }
+
+            let parsed;
+            try {
+                parsed = JSON.parse(rawData);
+            } catch (error) {
+                throw makeStreamingParseError('Failed to parse streaming completion event JSON.', rawData, error);
+            }
+
+            lastEvent = parsed;
+            finishReason = getStreamingFinishReason(parsed) || finishReason;
+            text += getStreamingReply(parsed, state, { chatCompletionSource: api, overrideShowThoughts: false });
+        }
+    } finally {
+        try {
+            reader.releaseLock();
+        } catch {
+            // Ignore reader cleanup errors; the response has already been consumed.
+        }
+    }
+
+    return makeSyntheticStreamingResponse(text, lastEvent, lastRawEvent, finishReason);
+}
+
+async function parseCompletionResponse(response, api) {
+    if (isEventStreamResponse(response)) {
+        return await parseSseCompletionResponseBody(response.body, api);
+    }
+
+    const bodyText = await response.text();
+    if (looksLikeSsePayload(bodyText)) {
+        return await parseSseCompletionResponseBody(new Response(bodyText).body, api);
+    }
+
+    return JSON.parse(bodyText);
+}
+
+function getChatCompletionServiceOrNull() {
+    try {
+        const service = getContext?.()?.ChatCompletionService;
+        if (service && typeof service.sendRequest === 'function') {
+            return service;
+        }
+    } catch (error) {
+        if (!hasWarnedMissingChatCompletionService) {
+            console.warn(`${MODULE_NAME}: ChatCompletionService is unavailable; falling back to STMB request path.`, error);
+            hasWarnedMissingChatCompletionService = true;
+        }
+        return null;
+    }
+
+    if (!hasWarnedMissingChatCompletionService) {
+        console.warn(`${MODULE_NAME}: ChatCompletionService is unavailable; falling back to STMB request path.`);
+        hasWarnedMissingChatCompletionService = true;
+    }
+    return null;
+}
+
+async function sendViaChatCompletionService(body, signal, presetName = '') {
+    const service = getChatCompletionServiceOrNull();
+    if (!service) {
+        return null;
+    }
+
+    const normalizedPresetName = typeof presetName === 'string' ? presetName.trim() : '';
+    const serviceBody = {
+        ...body,
+        stream: !!oai_settings?.stream_openai,
+    };
+    let full;
+    try {
+        if (normalizedPresetName && typeof service.processRequest === 'function') {
+            full = await service.processRequest(serviceBody, { presetName: normalizedPresetName }, false, signal);
+        } else {
+            if (normalizedPresetName && typeof service.processRequest !== 'function') {
+                console.warn(`${MODULE_NAME}: ChatCompletionService.processRequest is unavailable; falling back to sendRequest.`);
+            }
+            full = await service.sendRequest(serviceBody, false, signal);
+        }
+
+        if (typeof full === 'function') {
+            let text = '';
+            let lastChunk = null;
+            for await (const chunk of full()) {
+                lastChunk = chunk;
+                if (typeof chunk?.text === 'string') {
+                    text = chunk.text;
+                }
+            }
+            return {
+                text,
+                full: {
+                    choices: [
+                        {
+                            index: 0,
+                            message: {
+                                role: 'assistant',
+                                content: text,
+                            },
+                            finish_reason: null,
+                        },
+                    ],
+                    stmb_streaming: {
+                        source: 'chat_completion_service',
+                        last_chunk: lastChunk || null,
+                    },
+                },
+            };
+        }
+    } catch (error) {
+        if (signal?.aborted) {
+            throw error;
+        }
+        console.warn(`${MODULE_NAME}: ChatCompletionService request failed; falling back to STMB request path.`, error);
+        return null;
+    }
+    return {
+        text: extractCompletionText(full),
+        full,
+    };
+}
 
 /**
 *Send a raw completion request to the backend, bypassing SillyTavern's chat context stack.*
@@ -95,6 +414,10 @@ function getCurrentCompletionEndpoint() {
 *@param {string} [opts.api] - 'openai', 'claude', 'makersuite', 'custom', etc. (Note: ST uses 'makersuite' as the canonical provider key; avoid other aliases).*
 *@param {string} [opts.endpoint] - Custom endpoint URL for custom APIs*
 *@param {Object} [opts.extra] - Any extra params (max_tokens, etc)*
+*@param {boolean} [opts.reverseProxy] - Whether to forward SillyTavern reverse proxy settings for supported providers*
+*@param {Object|null} [opts.jsonSchema] - Optional SillyTavern structured-output schema*
+*@param {boolean} [opts.useChatCompletionService=false] - Whether to use SillyTavern's ChatCompletionService for non-manual requests*
+*@param {string} [opts.chatCompletionPreset=''] - Optional SillyTavern chat completion preset to apply through ChatCompletionService.processRequest*
 *@returns {Promise<{text: string, full: object}>}*
 */
 export async function sendRawCompletionRequest({
@@ -105,27 +428,50 @@ export async function sendRawCompletionRequest({
     endpoint = null,
     apiKey = null,
     extra = {},
+    reverseProxy = false,
+    signal = null,
+    jsonSchema = null,
+    useChatCompletionService = false,
+    chatCompletionPreset = '',
 }) {
     let url = getCurrentCompletionEndpoint();
     let headers = getRequestHeaders();
+    const modelId = (typeof model === 'string' ? model.toLowerCase() : '');
 
-    // Compute desired max tokens from explicit sources only (no minimum enforced)
-    const desiredFromSources = Math.max(
-        Number(extra.max_tokens) || 0,
-        Number(oai_settings.max_response) || 0
-    );
+    // Compute desired max tokens:
+    // - STMB override wins if set (>0)
+    // - otherwise use the largest explicit value from request extra / ST UI max_tokens
+    //   (no minimum enforced)
+    const stmbOverrideRaw = extension_settings?.STMemoryBooks?.moduleSettings?.maxTokens;
+    const stmbOverride = Number.parseInt(stmbOverrideRaw, 10);
+    const desiredFromSources = (Number.isFinite(stmbOverride) && stmbOverride > 0)
+        ? stmbOverride
+        : Math.max(
+            Number(extra.max_tokens) || 0,
+            Number(extra.max_completion_tokens) || 0,
+            Number(extra.max_output_tokens) || 0,
+            Number(extra.max_new_tokens) || 0,
+            Number(oai_settings?.openai_max_tokens) || 0,
+            // Kept for backward compatibility if a fork uses a different name
+            Number(oai_settings?.max_response) || 0
+        );
 
     const desiredInt = Math.floor(desiredFromSources) || 0;
 
-    // Set tokens based on explicit inputs; handle special-case for gpt-5 (any model id containing gpt-5)
+    // Regex to detect models that require max_completion_tokens instead of max_tokens
+    // (e.g., gpt-5, gpt-4o variants, o1-preview, o1-mini)
+    const usesMaxCompletionTokens = /(gpt-5|gpt-4o|o1(-preview|-mini)?)/i;
+
+    // Set tokens based on explicit inputs; handle special-case for models using max_completion_tokens
     if (Number.isFinite(desiredInt) && desiredInt > 0) {
-        const modelId = (typeof model === 'string' ? model.toLowerCase() : '');
-        if (modelId.includes('gpt-5')) {
+        if (usesMaxCompletionTokens.test(modelId)) {
             extra.max_completion_tokens = desiredInt;
             // Ensure we don't send max_tokens for this provider
             delete extra.max_tokens;
         } else {
             extra.max_tokens = desiredInt;
+            // Avoid accidentally sending both OpenAI-style token fields.
+            delete extra.max_completion_tokens;
         }
     }
 
@@ -134,8 +480,8 @@ export async function sendRawCompletionRequest({
         // Coerce and validate the incoming value to a finite number before flooring to avoid NaN propagation
         const moRaw = Number.parseFloat(extra.max_output_tokens);
         const mo = Number.isFinite(moRaw) ? Math.floor(moRaw) : 0;
-        if (Number.isFinite(extra.max_tokens) && extra.max_tokens > 0) {
-            extra.max_output_tokens = Math.min(mo, extra.max_tokens);
+        if (Number.isFinite(desiredInt) && desiredInt > 0) {
+            extra.max_output_tokens = Math.min(mo, desiredInt);
         } else {
             extra.max_output_tokens = mo;
         }
@@ -148,6 +494,7 @@ export async function sendRawCompletionRequest({
         model,
         temperature,
         chat_completion_source: api,
+        stream: false,
         ...extra,
     };
 
@@ -174,6 +521,7 @@ export async function sendRawCompletionRequest({
                 { role: 'user', content: prompt }
             ],
             temperature,
+            stream: false,
             ...extra,
         };
     } else if (api === 'custom' && model) {
@@ -181,12 +529,37 @@ export async function sendRawCompletionRequest({
         body.custom_url = oai_settings.custom_url || '';
     } else if (api === 'deepseek') {
         body.custom_url = `https://api.deepseek.com/chat/completions`; // use primary Deepseek endpoint
+    } else if (api === 'zai') {
+        body.zai_endpoint = oai_settings?.zai_endpoint || ZAI_ENDPOINT.COMMON;
+    }
+
+    if (jsonSchema && api !== 'full-manual') {
+        body.json_schema = jsonSchema;
+    }
+
+    if (shouldForwardReverseProxy(api, reverseProxy)) {
+        body.reverse_proxy = oai_settings.reverse_proxy;
+        body.proxy_password = oai_settings.proxy_password || '';
+    }
+
+    if (api === 'vertexai') {
+        body.vertexai_auth_mode = oai_settings?.vertexai_auth_mode || 'express';
+        body.vertexai_region = oai_settings?.vertexai_region || 'us-central1';
+        body.vertexai_express_project_id = oai_settings?.vertexai_express_project_id || '';
+    }
+
+    if (api !== 'full-manual' && useChatCompletionService) {
+        const serviceResult = await sendViaChatCompletionService(body, signal, chatCompletionPreset);
+        if (serviceResult) {
+            return serviceResult;
+        }
     }
 
     const res = await fetch(url, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify(body),
+        signal: signal || undefined,
     });
 
     if (!res.ok) {
@@ -197,32 +570,15 @@ export async function sendRawCompletionRequest({
             providerBody = '';
         }
         const err = new Error(`LLM request failed: ${res.status} ${res.statusText}`);
+        err.status = res.status;
         if (providerBody) {
             err.providerBody = providerBody;
         }
         throw err;
     }
 
-    const data = await res.json();
-
-    let text = '';
-
-    // Handle different response formats
-    if (data.choices?.[0]?.message?.content) {
-        text = data.choices[0].message.content;
-    } else if (data.completion) {
-        text = data.completion;
-    } else if (data.choices?.[0]?.text) {
-        text = data.choices[0].text;
-    } else if (data.content && Array.isArray(data.content)) {
-        // Handle Claude's new structured format directly in raw response
-        const textBlock = data.content.find(block =>
-            block && typeof block === 'object' && block.type === 'text' && block.text
-        );
-        text = textBlock?.text || '';
-    } else if (typeof data.content === 'string') {
-        text = data.content;
-    }
+    const data = await parseCompletionResponse(res, api);
+    const text = extractCompletionText(data);
 
     return { text, full: data };
 }
@@ -230,7 +586,7 @@ export async function sendRawCompletionRequest({
 /**
  * Unified request wrapper for side prompts and memory generation.
  * Accepts normalized connection fields and forwards to sendRawCompletionRequest.
- * @param {{ api: string, model: string, prompt: string, temperature?: number, endpoint?: string, apiKey?: string, extra?: object }} opts
+ * @param {{ api: string, model: string, prompt: string, temperature?: number, endpoint?: string, apiKey?: string, extra?: object, reverseProxy?: boolean, jsonSchema?: object, useChatCompletionService?: boolean, chatCompletionPreset?: string }} opts
  * @returns {Promise<{ text: string, full: object }>}
  */
 export async function requestCompletion({
@@ -241,6 +597,11 @@ export async function requestCompletion({
     endpoint = null,
     apiKey = null,
     extra = {},
+    reverseProxy = false,
+    signal = null,
+    jsonSchema = null,
+    useChatCompletionService = false,
+    chatCompletionPreset = '',
 }) {
     // Delegate all provider-specific shaping to sendRawCompletionRequest which already
     // handles: full-manual, custom (custom_model_id  oai_settings.custom_url), and normal providers.
@@ -252,6 +613,11 @@ export async function requestCompletion({
         endpoint,
         apiKey,
         extra,
+        reverseProxy,
+        signal,
+        jsonSchema,
+        useChatCompletionService,
+        chatCompletionPreset,
     });
 }
 
@@ -673,12 +1039,50 @@ export function parseAIJsonResponse(aiResponse) {
 }
 
 // Submit corrected raw, return a memory-like object for insertion
- export async function submitCorrectedRaw(correctedRaw, profile) {
+export async function submitCorrectedRaw(correctedRaw, profile) {
     // Reuse parsing  memory construction logic
     const memory = generateMemoryFromRaw(correctedRaw, profile);
     // In a real app, you might submit to backend or trigger an insertion event.
     // Here we return the memory object so the caller/UI can insert/use it accordingly.
     return memory;
+}
+
+function shouldUseStructuredOutput(profile, apiType) {
+    return !profile?.skipStructuredOutput && apiType !== 'full-manual';
+}
+
+function shouldFallbackFromStructuredOutput(error) {
+    if (isStmbStopError(error) || error instanceof AIResponseError) {
+        return false;
+    }
+
+    const combinedText = [
+        error?.message,
+        error?.providerBody,
+        error?.rawResponse,
+    ].map(value => String(value || '')).join('\n').toLowerCase();
+
+    return combinedText.includes('response_format')
+        || combinedText.includes('json_schema')
+        || combinedText.includes('json_object')
+        || combinedText.includes('structured output');
+}
+
+function assertProviderDidNotTruncate(providerResponse, rawText) {
+    const finishReason = providerResponse?.choices?.[0]?.finish_reason || providerResponse?.finish_reason || providerResponse?.stop_reason;
+    const fr = typeof finishReason === 'string' ? finishReason.toLowerCase() : '';
+    if (fr.includes('length') || fr.includes('max')) {
+        const err = makeAIError('PROVIDER_TRUNCATION', 'Model response appears truncated (provider finish_reason). Please increase Max Response Length.', false);
+        try { err.rawResponse = rawText || ''; } catch {}
+        try { err.providerResponse = providerResponse || null; } catch {}
+        throw err;
+    }
+    if (providerResponse?.truncated === true) {
+        const err = makeAIError('PROVIDER_TRUNCATION_FLAG', 'Model response appears truncated (provider flag). Please increase Max Response Length.', false);
+        try { err.rawResponse = rawText || ''; } catch {}
+        try { err.providerResponse = providerResponse || null; } catch {}
+        throw err;
+    }
 }
 
 /**
@@ -689,9 +1093,13 @@ export function parseAIJsonResponse(aiResponse) {
  * @returns {Promise<Object>} The structured memory result from JSON parsing
  * @throws {AIResponseError} If the AI generation fails or doesn't return valid JSON
  */
-async function generateMemoryWithAI(promptString, profile) {
-    const characterDataReady = await waitForCharacterData();
+async function generateMemoryWithAI(promptString, profile, options = {}) {
+    const signal = options?.signal || null;
+    const characterDataReady = await waitForCharacterData({ signal });
     if (!characterDataReady) {
+        if (signal?.aborted) {
+            throw new StmbCancelledError();
+        }
         throw new AIResponseError(
             'Character data is not available. This may indicate that SillyTavern is still loading. Please wait a moment and try again.'
         );
@@ -704,35 +1112,48 @@ async function generateMemoryWithAI(promptString, profile) {
         // Note: ST base uses 'makersuite' as the canonical provider key for this source.
         const apiType = normalizeCompletionSource(conn.api || getCurrentApiInfo().api);
         const extra = {};
-        if (oai_settings.openai_max_tokens) {
+        const stmbMaxTokensRaw = extension_settings?.STMemoryBooks?.moduleSettings?.maxTokens;
+        const stmbMaxTokens = Number.parseInt(stmbMaxTokensRaw, 10);
+        if (Number.isFinite(stmbMaxTokens) && stmbMaxTokens > 0) {
+            extra.max_tokens = stmbMaxTokens;
+        } else if (oai_settings.openai_max_tokens) {
             extra.max_tokens = oai_settings.openai_max_tokens;
         }
 
-        const { text: aiResponseText, full: aiFull } = await sendRawCompletionRequest({
+        const useStructuredOutput = shouldUseStructuredOutput(profile, apiType);
+        const requestOptions = {
             model: conn.model,
             prompt: promptString,
             temperature: conn.temperature,
             api: apiType,
             endpoint: conn.endpoint,
             apiKey: conn.apiKey,
-            extra: extra
-        });
+            extra: extra,
+            reverseProxy: !!conn.reverseProxy,
+            signal,
+            jsonSchema: useStructuredOutput ? MEMORY_RESPONSE_JSON_SCHEMA : null,
+            useChatCompletionService: profile?.useChatCompletionService === true && apiType !== 'full-manual',
+            chatCompletionPreset: profile?.chatCompletionPreset || '',
+        };
 
-        // Detect provider-reported truncation before attempting to parse
-        const finishReason = aiFull?.choices?.[0]?.finish_reason || aiFull?.finish_reason || aiFull?.stop_reason;
-        const fr = typeof finishReason === 'string' ? finishReason.toLowerCase() : '';
-        if (fr.includes('length') || fr.includes('max')) {
-            const err = makeAIError('PROVIDER_TRUNCATION', 'Model response appears truncated (provider finish_reason). Please increase Max Response Length.', false);
-            try { err.rawResponse = aiResponseText || ''; } catch {}
-            try { err.providerResponse = aiFull || null; } catch {}
-            throw err;
+        let aiResponse;
+        try {
+            aiResponse = await sendRawCompletionRequest(requestOptions);
+        } catch (error) {
+            if (!useStructuredOutput || !shouldFallbackFromStructuredOutput(error)) {
+                throw error;
+            }
+
+            console.warn(`${MODULE_NAME}: Structured-output request failed; retrying as plain-text completion.`, error);
+            aiResponse = await sendRawCompletionRequest({
+                ...requestOptions,
+                jsonSchema: null,
+            });
         }
-        if (aiFull?.truncated === true) {
-            const err = makeAIError('PROVIDER_TRUNCATION_FLAG', 'Model response appears truncated (provider flag). Please increase Max Response Length.', false);
-            try { err.rawResponse = aiResponseText || ''; } catch {}
-            try { err.providerResponse = aiFull || null; } catch {}
-            throw err;
-        }
+
+        const aiResponseText = aiResponse.text;
+        const aiFull = aiResponse.full;
+        assertProviderDidNotTruncate(aiFull, aiResponseText);
 
         const jsonResult = parseAIJsonResponse(aiResponseText);
 
@@ -743,6 +1164,7 @@ async function generateMemoryWithAI(promptString, profile) {
             profile: profile
         };
     } catch (error) {
+        if (isStmbStopError(error)) throw error;
         if (error instanceof AIResponseError) throw error;
         const e = new AIResponseError(`Memory generation failed: ${error.message || error}`);
         try {
@@ -785,7 +1207,7 @@ export async function createMemory(compiledScene, profile, options = {}) {
             );
         }
         
-        const response = await generateMemoryWithAI(promptString, profile);
+        const response = await generateMemoryWithAI(promptString, profile, { signal: options?.signal || null });
         const processedMemory = processJsonResult(response, compiledScene);
 
         const memoryResult = {
@@ -797,6 +1219,9 @@ export async function createMemory(compiledScene, profile, options = {}) {
                 characterName: compiledScene.metadata.characterName,
                 userName: compiledScene.metadata.userName,
                 chatId: compiledScene.metadata.chatId,
+                characterFilterNames: Array.isArray(compiledScene.metadata.characterFilterNames)
+                    ? [...compiledScene.metadata.characterFilterNames]
+                    : undefined,
                 createdAt: new Date().toISOString(),
                 profileUsed: profile.name,
                 presetUsed: profile.preset || 'custom',
@@ -805,14 +1230,13 @@ export async function createMemory(compiledScene, profile, options = {}) {
                 version: '2.0'
             },
             suggestedKeys: processedMemory.suggestedKeys,
-            titleFormat: (profile.useDynamicSTSettings || (profile?.connection?.api === 'current_st')) ?
-                (extension_settings.STMemoryBooks?.titleFormat || '[000] - {{title}}') :
-                (profile.titleFormat || '[000] - {{title}}'),
+            titleFormat: profile.titleFormat || '[000] - {{title}}',
             lorebookSettings: {
                 constVectMode: profile.constVectMode,
                 position: profile.position,
                 orderMode: profile.orderMode,
                 orderValue: profile.orderValue,
+                reverseStart: Number.isFinite(profile.reverseStart) ? profile.reverseStart : 9999,
                 preventRecursion: profile.preventRecursion,
                 delayUntilRecursion: profile.delayUntilRecursion,
                 outletName: (Number(profile.position) === 7 ? (profile.outletName || '') : undefined),
@@ -838,6 +1262,9 @@ export async function createMemory(compiledScene, profile, options = {}) {
         return memoryResult;
         
     } catch (error) {
+        if (isStmbStopError(error)) {
+            throw error;
+        }
         if (error instanceof TokenWarningError || error instanceof AIResponseError || error instanceof InvalidProfileError) {
             throw error;
         }
@@ -859,13 +1286,107 @@ function validateInputs(compiledScene, profile) {
         throw new Error('Invalid or empty compiled scene data provided.');
     }
 
-    // profile must have a non-empty prompt OR a preset key
+    // profile must have a non-empty prompt, preset key, or resolved group-specific prompt.
     const hasPrompt = typeof profile?.prompt === 'string' && profile.prompt.trim().length > 0;
     const hasPreset = typeof profile?.preset === 'string' && profile.preset.trim().length > 0;
+    const promptTarget = String(compiledScene?.metadata?.stmbPromptTarget || profile?.stmbPromptTarget || '').trim().toLowerCase();
+    const hasGroupPrompt =
+        (typeof profile?.groupPrompt === 'string' && profile.groupPrompt.trim().length > 0)
+        || (typeof profile?.groupPreset === 'string' && profile.groupPreset.trim().length > 0);
+    const hasCharacterPrompt =
+        (typeof profile?.characterPrompt === 'string' && profile.characterPrompt.trim().length > 0)
+        || (typeof profile?.characterPreset === 'string' && profile.characterPreset.trim().length > 0);
+    const hasGroupSpecificPrompt = Boolean(profile?.useGroupSpecificPrompts) && (
+        promptTarget === 'group'
+            ? hasGroupPrompt
+            : promptTarget === 'character' || promptTarget === 'char'
+                ? hasCharacterPrompt
+                : hasGroupPrompt || hasCharacterPrompt
+    );
 
-    if (!hasPrompt && !hasPreset) {
+    if (!hasPrompt && !hasPreset && !hasGroupSpecificPrompt) {
         throw new InvalidProfileError('Invalid profile configuration. You must set either a custom prompt or a valid preset.');
     }
+}
+
+async function resolveAdditionalContextEntries(profile, compiledScene = null) {
+    if (Array.isArray(compiledScene?.additionalContextEntries)) {
+        return { entries: compiledScene.additionalContextEntries, skipped: [], source: 'snapshot' };
+    }
+
+    const markers = getSceneMarkers() || {};
+    const hasContextSettingKey = Object.hasOwn(markers, 'contextSettingKey');
+    if (hasContextSettingKey) {
+        const contextSettingKey = String(markers.contextSettingKey || '').trim();
+        if (contextSettingKey === CONTEXT_NONE_KEY || !contextSettingKey) {
+            return { entries: [], skipped: [], source: 'none' };
+        }
+
+        const setting = await getContextSetting(contextSettingKey);
+        if (!setting) {
+            console.warn(`${MODULE_NAME}: Selected context setting was not found: ${contextSettingKey}`);
+            try {
+                toastr.warning(
+                    translate('Selected context setting was not found. Continuing without Additional Context.', 'STMemoryBooks_ContextSettings_MissingSelectedWarning'),
+                    'STMemoryBooks',
+                    { preventDuplicates: true },
+                );
+            } catch {}
+            return { entries: [], skipped: [], source: 'missing' };
+        }
+
+        const resolved = await resolveContextSettingEntries(setting);
+        if (resolved.skipped?.length > 0) {
+            console.warn(`${MODULE_NAME}: Skipped ${resolved.skipped.length} stale context setting entr${resolved.skipped.length === 1 ? 'y' : 'ies'}`, resolved.skipped);
+            try {
+                toastr.warning(
+                    translate('Some additional context entries could not be loaded and were skipped.', 'STMemoryBooks_Profile_AlsoIncludeSkipped'),
+                    'STMemoryBooks',
+                    { preventDuplicates: true },
+                );
+            } catch {}
+        }
+        return { ...resolved, source: 'context-setting' };
+    }
+
+    const refs = normalizeAdditionalContextEntries(profile?.additionalContextEntries);
+    if (refs.length === 0 || profile?.isBuiltinCurrentST) {
+        return { entries: [], skipped: [], source: 'none' };
+    }
+
+    try {
+        toastr.warning(
+            translate('Using legacy profile Additional Context for this run. It will be migrated to Context Settings when possible.', 'STMemoryBooks_ContextSettings_LegacyProfileWarning'),
+            'STMemoryBooks',
+            { preventDuplicates: true },
+        );
+    } catch {}
+    const resolved = await resolveContextSettingEntriesFromRefs(refs);
+    if (resolved.skipped?.length > 0) {
+        console.warn(`${MODULE_NAME}: Skipped ${resolved.skipped.length} stale legacy additional context entr${resolved.skipped.length === 1 ? 'y' : 'ies'}`, resolved.skipped);
+        try {
+            toastr.warning(
+                translate('Some additional context entries could not be loaded and were skipped.', 'STMemoryBooks_Profile_AlsoIncludeSkipped'),
+                'STMemoryBooks',
+                { preventDuplicates: true },
+            );
+        } catch {}
+    }
+    return { ...resolved, source: 'legacy-profile' };
+}
+
+export function appendAdditionalContextSection(sceneHeader, additionalContextEntries = []) {
+    const usableEntries = additionalContextEntries.filter(entry => entry.content);
+    if (usableEntries.length === 0) return;
+
+    sceneHeader.push("=== ADDITIONAL CONTEXT FOR REFERENCE ===");
+    usableEntries.forEach((entry, index) => {
+        sceneHeader.push(`Reference ${index + 1} - ${entry.title}:`);
+        sceneHeader.push(entry.content);
+        sceneHeader.push("");
+    });
+    sceneHeader.push("=== END ADDITIONAL CONTEXT FOR REFERENCE ===");
+    sceneHeader.push("");
 }
 
 /**
@@ -874,9 +1395,10 @@ function validateInputs(compiledScene, profile) {
  * @param {Array<Object>} messages - The messages from the compiled scene.
  * @param {Object} metadata - The metadata from the compiled scene.
  * @param {Array<Object>} previousSummariesContext - Previous summaries for context (optional).
+ * @param {Array<Object>} additionalContextEntries - Explicit profile-selected lorebook entries.
  * @returns {string} A formatted string representing the chat scene.
  */
-function formatSceneForAI(messages, metadata, previousSummariesContext = []) {
+function formatSceneForAI(messages, metadata, previousSummariesContext = [], additionalContextEntries = []) {
     const messageLines = messages.map(message => {
         const speaker = message.name || 'Unknown';
         const content = (message.mes || '').trim();
@@ -887,9 +1409,11 @@ function formatSceneForAI(messages, metadata, previousSummariesContext = []) {
         ""
     ];
     
+    appendAdditionalContextSection(sceneHeader, additionalContextEntries);
+
     // Add previous memories context if available
     if (previousSummariesContext && previousSummariesContext.length > 0) {
-        sceneHeader.push("=== PREVIOUS SCENE CONTEXT (DO NOT SUMMARIZE) ===");
+        sceneHeader.push("=== PREVIOUS SCENE CONTEXT (DO NOT PROCESS) ===");
         sceneHeader.push("These are previous memories for context only. Do NOT include them in your new memory:");
         sceneHeader.push("");
         
@@ -902,10 +1426,10 @@ function formatSceneForAI(messages, metadata, previousSummariesContext = []) {
             sceneHeader.push("");
         });
         
-        sceneHeader.push("=== END PREVIOUS SCENE CONTEXT - SUMMARIZE ONLY THE SCENE BELOW ===");
+        sceneHeader.push("=== END PREVIOUS SCENE CONTEXT - PROCESS ONLY THE SCENE BELOW ===");
         sceneHeader.push("");
     }
-    
+
     sceneHeader.push("=== SCENE TRANSCRIPT ===");
     sceneHeader.push(...messageLines);
     sceneHeader.push("");
@@ -935,13 +1459,20 @@ async function buildPrompt(compiledScene, profile) {
     const { metadata, messages, previousSummariesContext } = compiledScene;
     
     // Use utils.js to get the effective prompt (now designed for JSON output)
-    const systemPrompt = await getEffectivePrompt(profile);
+    const promptProfile = {
+        ...(profile || {}),
+        stmbPromptTarget: metadata?.stmbPromptTarget || profile?.stmbPromptTarget || '',
+    };
+    const systemPrompt = await getEffectivePrompt(promptProfile);
     
     // Use substituteParams to allow for standard macros like {{char}} and {{user}}
-    const processedSystemPrompt = substituteParams(systemPrompt, metadata.userName, metadata.characterName);
+    const groupName = metadata.groupName || metadata.characterName || '';
+    const processedSystemPrompt = substituteParams(systemPrompt, metadata.userName, metadata.characterName)
+        .replace(/\{\{\s*group\s*\}\}/gi, () => groupName);
     
     // Build scene text for user prompt
-    const sceneText = formatSceneForAI(messages, metadata, previousSummariesContext);
+    const additionalContext = await resolveAdditionalContextEntries(profile, compiledScene);
+    const sceneText = formatSceneForAI(messages, metadata, previousSummariesContext, additionalContext.entries);
     
     // Combine system prompt and scene
     const finalPrompt = `${processedSystemPrompt}\n\n${sceneText}`;

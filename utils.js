@@ -1,12 +1,16 @@
-import { chat_metadata, characters, name2, this_chid } from '../../../../script.js';
+// Copyright (C) 2024–2026 Aiko Hanasaki
+// SPDX-License-Identifier: AGPL-3.0-only
+
+import { chat_metadata, characters, eventSource, name2, this_chid } from '../../../../script.js';
 import { getContext, extension_settings } from '../../../extensions.js';
 import { selected_group, groups } from '../../../group-chats.js';
 import { METADATA_KEY, world_names } from '../../../world-info.js';
 import { Popup, POPUP_TYPE, POPUP_RESULT } from '../../../popup.js';
 import { getSceneMarkers, saveMetadataForCurrentContext } from './sceneManager.js';
 import { getPrompt as getCustomPresetPrompt } from './summaryPromptManager.js';
-import { DISPLAY_NAME_DEFAULTS, DISPLAY_NAME_I18N_KEYS } from './constants.js';
+import { DISPLAY_NAME_DEFAULTS, DISPLAY_NAME_I18N_KEYS, MEMORY_TIER_CACHE_REFRESH_EVENT } from './constants.js';
 import { translate } from '../../../i18n.js';
+import { escapeHtml } from '../../../utils.js';
 
 const MODULE_NAME = 'STMemoryBooks-Utils';
 const $ = window.jQuery;
@@ -33,6 +37,25 @@ export function readIntInput(inputEl, fallback) {
 
 export function clampInt(n, min, max) {
   return Math.min(Math.max(n, min), max);
+}
+
+export function markStmbPopup(popup) {
+    popup?.dlg?.classList?.add('stmb-popup');
+    return popup;
+}
+
+export function withGoBackButton(options = {}) {
+    return {
+        ...options,
+        customButtons: [
+            ...(Array.isArray(options.customButtons) ? options.customButtons : []),
+            {
+                text: translate('Go back', 'STMemoryBooks_GoBack'),
+                result: POPUP_RESULT.CANCELLED,
+                classes: ['menu_button'],
+            },
+        ],
+    };
 }
 
 // Centralized DOM selectors - single source of truth
@@ -63,6 +86,8 @@ export const SELECTORS = {
     modelFireworks: '#model_fireworks_select',
     modelCometapi: '#model_cometapi_select',
     modelAzureOpenai: '#model_azure_openai_select',
+    modelZai: '#model_zai_select',
+    modelChutes: '#model_chutes_select',
     tempOpenai: '#temp_openai',
     tempCounterOpenai: '#temp_counter_openai'
 };
@@ -72,7 +97,7 @@ const SUPPORTED_COMPLETION_SOURCES = [
     'openai', 'claude', 'openrouter', 'ai21', 'makersuite', 'vertexai',
     'mistralai', 'custom', 'cohere', 'perplexity', 'groq', 'nanogpt',
     'deepseek', 'electronhub', 'aimlapi', 'xai', 'pollinations',
-    'moonshot', 'fireworks', 'cometapi', 'azure_openai'
+    'moonshot', 'fireworks', 'cometapi', 'azure_openai', 'zai', 'chutes'
 ];
 
 /**
@@ -160,6 +185,8 @@ export function getApiSelectors() {
         fireworks:     `${prefix}model_fireworks_select`,
         cometapi:      `${prefix}model_cometapi_select`,
         azure_openai:  `${prefix}model_azure_openai_select`,
+        zai:           `${prefix}model_zai_select`,
+        chutes:        `${prefix}model_chutes_select`,
     };
 
     const model = modelSelectorMap[completionSource] || modelSelectorMap.openai;
@@ -316,6 +343,10 @@ export function getCurrentMemoryBooksContext() {
 export async function getEffectiveLorebookName() {
     const settings = extension_settings.STMemoryBooks;
     
+    // This helper keeps its legacy behavior on purpose. Passive read paths still
+    // use it to resolve a best-effort lorebook without invoking the shared
+    // interactive recovery flow, which is reserved for write/generation paths.
+    
     // If manual mode is OFF, use the default chat-bound lorebook
     if (!settings.moduleSettings.manualModeEnabled) {
         return chat_metadata?.[METADATA_KEY] || null;
@@ -360,6 +391,7 @@ export async function getEffectiveLorebookName() {
         // Save the selection to the chat's metadata
         stmbData.manualLorebook = selectedLorebook;
         saveMetadataForCurrentContext(); // Use the existing function from sceneManager to save correctly for groups/single chats
+        void eventSource.emit(MEMORY_TIER_CACHE_REFRESH_EVENT);
         
         toastr.success(`"${selectedLorebook}" is now the Memory Book for this chat.`, 'STMemoryBooks');
         return selectedLorebook;
@@ -374,25 +406,45 @@ export async function getEffectiveLorebookName() {
  * This function is intended for "change" operations where the user explicitly wants to select a different lorebook.
  *
  * @param {string} currentLorebook - The currently selected lorebook (optional, for display purposes)
+ * @param {{excludedLorebookNames?: string[]}} options - Lorebooks unavailable for selection.
  * @returns {Promise<string|null>} The name of the selected lorebook, or null if cancelled/no selection made.
  */
-export async function showLorebookSelectionPopup(currentLorebook = null) {
+export async function showLorebookSelectionPopup(currentLorebook = null, options = {}) {
+    const markers = getSceneMarkers() || {};
+    const currentCharacterLorebooks = markers.manualCharacterLorebooks
+        && typeof markers.manualCharacterLorebooks === 'object'
+        && !Array.isArray(markers.manualCharacterLorebooks)
+        ? Object.values(markers.manualCharacterLorebooks)
+        : [];
+    const excludedLorebooks = new Set([
+        ...currentCharacterLorebooks,
+        ...(Array.isArray(options.excludedLorebookNames) ? options.excludedLorebookNames : []),
+    ].map(name => String(name || '').trim()).filter(Boolean));
+    const availableLorebooks = world_names.filter(name => !excludedLorebooks.has(name));
+
     // Check if lorebooks are available
-    if (world_names.length === 0) {
+    if (availableLorebooks.length === 0) {
         toastr.error('No lorebooks found to select from.', 'STMemoryBooks');
         return null;
     }
 
-    const lorebookOptions = world_names.map(name => {
+    const lorebookOptions = [
+        currentLorebook && excludedLorebooks.has(currentLorebook)
+            ? `<option value="${escapeHtml(currentLorebook)}" selected disabled>${translate('Unavailable character Memory Book: {{name}}', 'STMemoryBooks_ManualLorebookUnavailableCharacterBook').replace('{{name}}', escapeHtml(currentLorebook))}</option>`
+            : !currentLorebook
+            ? `<option value="" selected disabled>${translate('None selected', 'STMemoryBooks_NoneSelected')}</option>`
+            : '',
+        ...availableLorebooks.map(name => {
         const selected = name === currentLorebook ? ' selected' : '';
-        return `<option value="${name}"${selected}>${name}</option>`;
-    }).join('');
+        return `<option value="${escapeHtml(name)}"${selected}>${escapeHtml(name)}</option>`;
+        }),
+    ].join('');
 
     const popupContent = `
         <h4>Select a Memory Book</h4>
         <div class="world_entry_form_control">
             <p>Choose which lorebook should be used for this chat's memories.</p>
-            ${currentLorebook ? `<p><strong>Current:</strong> ${currentLorebook}</p>` : ''}
+            ${currentLorebook ? `<p><strong>Current:</strong> ${escapeHtml(currentLorebook)}</p>` : ''}
             <select id="stmb-manual-lorebook-select" class="text_pole">
                 ${lorebookOptions}
             </select>
@@ -404,12 +456,24 @@ export async function showLorebookSelectionPopup(currentLorebook = null) {
 
     if (result === POPUP_RESULT.AFFIRMATIVE) {
         const selectedLorebook = popup.dlg.querySelector('#stmb-manual-lorebook-select').value;
+        if (!selectedLorebook) {
+            toastr.error(translate('Please select a lorebook for manual mode', 'STMemoryBooks_PleaseSelectLorebookForManualMode'), 'STMemoryBooks');
+            return null;
+        }
+        if (excludedLorebooks.has(selectedLorebook)) {
+            toastr.error(
+                translate('A character Memory Book cannot also be the main group Memory Book.', 'STMemoryBooks_ManualLorebookCharacterConflict'),
+                'STMemoryBooks',
+            );
+            return null;
+        }
 
         // Only save and show success if a different lorebook was actually selected
         if (selectedLorebook !== currentLorebook) {
             const stmbData = getSceneMarkers();
             stmbData.manualLorebook = selectedLorebook;
             saveMetadataForCurrentContext();
+            void eventSource.emit(MEMORY_TIER_CACHE_REFRESH_EVENT);
 
             toastr.success(`Manual lorebook changed to: ${selectedLorebook}`, 'STMemoryBooks');
             return selectedLorebook;
@@ -505,13 +569,13 @@ export async function estimateTokens(text, options = {}) {
 
 /**
  * Resolve a profile's effective connection into a normalized shape
- * { api, model, temperature, endpoint, apiKey }.
+ * { api, model, temperature, endpoint, apiKey, reverseProxy }.
  * - Applies normalizeCompletionSource to api
  * - Clamps temperature to [0, 2] with default 0.7
- * - Passes through endpoint/apiKey if provided on the profile connection
+ * - Passes through endpoint/apiKey/reverseProxy if provided on the profile connection
  *
  * @param {Object} profile
- * @returns {{ api: string, model: string, temperature: number, endpoint?: string, apiKey?: string }}
+ * @returns {{ api: string, model: string, temperature: number, endpoint?: string, apiKey?: string, reverseProxy?: boolean }}
  */
 export function resolveEffectiveConnectionFromProfile(profile) {
     const conn = (profile?.effectiveConnection || profile?.connection || {});
@@ -523,8 +587,102 @@ export function resolveEffectiveConnectionFromProfile(profile) {
     }
     const endpoint = conn.endpoint ? String(conn.endpoint) : undefined;
     const apiKey = conn.apiKey ? String(conn.apiKey) : undefined;
+    const reverseProxy = !!conn.reverseProxy;
 
-    return { api, model, temperature, endpoint, apiKey };
+    return { api, model, temperature, endpoint, apiKey, reverseProxy };
+}
+
+export function createGroupParticipantResolver() {
+    if (!selected_group || !Array.isArray(groups) || !Array.isArray(characters)) {
+        return null;
+    }
+
+    const group = groups.find(item => String(item?.id) === String(selected_group));
+    if (!group || !Array.isArray(group.members) || group.members.length === 0) {
+        return null;
+    }
+
+    const members = [];
+    const memberAvatars = new Set();
+    const avatarsBySpeaker = new Map();
+    const seen = new Set();
+    for (const member of group.members) {
+        const memberId = String(member || '').trim();
+        if (!memberId) {
+            continue;
+        }
+
+        const character = characters.find(item => item?.avatar === memberId || item?.name === memberId);
+        const avatar = String(character?.avatar || memberId).trim();
+        if (!avatar) {
+            continue;
+        }
+
+        memberAvatars.add(avatar);
+        const speakerName = String(character?.name || '').trim();
+        if (speakerName) {
+            if (!avatarsBySpeaker.has(speakerName)) {
+                avatarsBySpeaker.set(speakerName, new Set());
+            }
+            avatarsBySpeaker.get(speakerName).add(avatar);
+        }
+
+        const key = avatar || memberId;
+        if (seen.has(memberId) || seen.has(key)) {
+            continue;
+        }
+
+        seen.add(memberId);
+        seen.add(key);
+        const name = String(character?.name || memberId).trim() || memberId;
+        members.push({
+            key,
+            avatar,
+            memberId,
+            name,
+            characterFilterName: getCharacterFilterNameFromAvatar(avatar),
+        });
+    }
+
+    return { memberAvatars, avatarsBySpeaker, members };
+}
+
+export function getCurrentGroupLorebookMembers() {
+    return createGroupParticipantResolver()?.members || [];
+}
+
+export function resolveGroupParticipantFilterName(message, resolver, messageId = null, logPrefix = MODULE_NAME) {
+    const originalAvatar = String(message?.original_avatar || '').trim();
+    if (originalAvatar && resolver.memberAvatars.has(originalAvatar)) {
+        return getCharacterFilterNameFromAvatar(originalAvatar);
+    }
+
+    const speakerName = String(message?.name || '').trim();
+    if (!speakerName) {
+        return null;
+    }
+
+    const avatarMatches = resolver.avatarsBySpeaker.get(speakerName);
+    if (!avatarMatches || avatarMatches.size !== 1) {
+        if (avatarMatches?.size > 1) {
+            console.warn(
+                `${logPrefix}: Ambiguous group participant name "${speakerName}" at message ${messageId ?? 'unknown'}; skipping character filter participant because original_avatar is unavailable or does not match a group member.`,
+                { speakerName, avatarMatches: Array.from(avatarMatches) },
+            );
+        }
+        return null;
+    }
+
+    return getCharacterFilterNameFromAvatar(Array.from(avatarMatches)[0]);
+}
+
+export function getCharacterFilterNameFromAvatar(avatar) {
+    const trimmed = String(avatar || '').trim();
+    if (!trimmed) {
+        return '';
+    }
+
+    return trimmed.replace(/\.[^/.]+$/, '');
 }
 
 
@@ -546,17 +704,115 @@ You must respond with ONLY valid JSON in this exact format:
 }
 
 For the content field, create a detailed beat-by-beat summary in narrative prose. First, note the dates/time. Then capture this scene accurately without losing ANY important information EXCEPT FOR [OOC] conversation/interaction. All [OOC] conversation/interaction is not useful for summaries.
-This summary will go in a vectorized database, so include:
+This summary will go in lorebook entry, so include:
 - All important story beats/events that happened
 - Key interaction highlights and character developments
 - Notable details, memorable quotes, and revelations
 - Outcome and anything else important for future interactions between {{user}} and {{char}}
 Capture ALL nuance without repeating verbatim. Make it comprehensive yet digestible.
 
-For the keywords field, provide 15-30 specific, descriptive, relevant keywords for vectorized database retrieval. Keywords must be concrete and scene-specific (locations, objects, proper nouns, unique actions). Do not use abstract themes (e.g., "sadness", "love") or character names.
+For the keywords field, provide 15-30 specific, descriptive, relevant keywords for keyword retrieval via word-matching in chat context. Keywords must be concrete and scene-specific (locations, objects, proper nouns, unique actions). Do not use abstract themes (e.g., "sadness", "love") or character names.
 
 Return ONLY the JSON, no other text.`,
             'STMemoryBooks_Prompt_summary'
+        ),
+        group: translate(
+`Analyze the following roleplay scene and create a memory entry from an omniscient POV.
+
+You must respond with ONLY valid JSON in this exact format:
+{
+  "title": "Short, descriptive scene title (3-6 words)",
+  "content": "Structured memory summary...",
+  "keywords": ["keyword1", "keyword2", "keyword3"]
+}
+
+- Write the memory as continuity relevant to the target group as a shared unit.
+- Include shared events, mutual decisions, group plans, promises, conflicts, secrets, relationship shifts, unresolved tensions, and facts that affect the group dynamic.
+- Include individual actions or emotions only when they changed the shared group state.
+- Do not create a merged personality for the group. Keep attribution clear: Alice did X, Bob thought Y, both agreed Z.
+- If only one member knows something, say so. Do not imply shared knowledge unless the scene supports it.
+
+For the content field, use this markdown structure:
+
+# [Scene Title]
+**Timeline**: (date/day/time, if known)
+
+## Target-Relevant Events
+- Summarize the events that matter to this group in chronological order.
+- Use cause -> intention -> reaction -> consequence logic.
+- Exclude flavor-only details unless they reveal a lasting character or relationship change.
+
+## Attribution
+- Clearly state who did what.
+- Clearly state who knew what.
+- Clearly state who felt, believed, suspected, misunderstood, or intended what.
+- Do not assign private thoughts or emotions to a character unless the scene text supports them.
+
+## Continuity Impact
+- Record what should matter in future scenes: decisions, injuries, promises, secrets, changed relationships, new knowledge, unresolved threads, practical consequences, emotional shifts, or altered trust.
+- Separate shared knowledge from member-specific knowledge.
+
+## Exclusions
+- Ignore and exclude all [OOC] or meta discussion.
+- Do not include unsupported assumptions.
+- Do not collapse multiple characters into vague phrases like "they felt" unless every target member clearly felt it.
+
+For the keywords field:
+- Generate 15-30 standalone topical keywords for retrieval.
+- Keywords must be concrete and scene-specific: locations, objects, proper nouns, unique actions, repeated motifs, plans, injuries, named events, or distinctive phrases.
+- Do not use abstract themes.
+- Do not use these major character names as keywords: {{group}}. NPC names may be used if the NPC played a major role.
+- Prefer keywords that would fire if the user later mentions the noun/action alone.
+
+Return ONLY the JSON, no additional text.`,
+            'STMemoryBooks_Prompt_group'
+        ),
+        char: translate(
+`Analyze the following scene and create a memory entry written with {{char}} as the focus.
+
+You must respond with ONLY valid JSON in this exact format:
+{
+  "title": "Short, descriptive scene title (3-6 words)",
+  "content": "Structured memory summary...",
+  "keywords": ["keyword1", "keyword2", "keyword3"]
+}
+
+Important: This is NOT a general scene summary. This is a targeted memory entry.
+- Write the memory as continuity relevant to {{char}}.
+- Include what {{char}} did, said, thought, felt, noticed, learned, decided, promised, concealed, misunderstood, or was affected by.
+- Include other characters depending on how their actions, words, emotions, or decisions matter to {{char}}'s future continuity.
+- Do not include information {{char}} could not know unless it directly affects future continuity and is clearly marked as external scene knowledge.
+- Attribute all actions, thoughts, emotions, and knowledge clearly. Do not blur characters together.
+
+For the content field, use this markdown structure:
+
+# [Scene Title]
+**Timeline**: (date/day/time, if known)
+
+## Target-Relevant Events
+- Summarize the events that matter to {{char}} in chronological order.
+- Use cause -> intention -> reaction -> consequence logic.
+- Exclude flavor-only details unless they reveal a lasting character or relationship change.
+
+## Attribution
+- Clearly state who did what.
+- Clearly state who knew what.
+- Clearly state who felt, believed, suspected, misunderstood, or intended what.
+- Do not assign private thoughts or emotions to a character unless the scene text supports them.
+
+## Continuity Impact
+- Record what should matter in future scenes: decisions, injuries, promises, secrets, changed relationships, new knowledge, unresolved threads, practical consequences, emotional shifts, or altered trust.
+- Separate shared knowledge from member-specific knowledge.
+
+## Exclusions
+- Ignore and exclude all [OOC] or meta discussion.
+- Do not summarize the whole scene if it is not relevant to {{char}}.
+- Do not include unsupported assumptions.
+
+For the keywords field, generate 15-30 specific, descriptive, highly relevant keywords for database retrieval - focus on the most important topical terms. Keywords must be concrete and scene-specific (locations, objects, proper nouns, unique actions). No compound keywords unless they are proper nouns. Do not use abstract themes (e.g., "sadness", "love") or character names.
+
+Return ONLY the JSON, no additional text.`,
+            'STMemoryBooks_Prompt_char'
         ),
         summarize: translate(
 `Analyze the following roleplay scene and return a structured summary as JSON.
@@ -575,7 +831,7 @@ For the content field, create a detailed bullet-point summary using markdown wit
 - **Notable Details**: Mention any important objects, settings, revelations, or details that might be relevant for future interactions.
 - **Outcome**: Summarize the result, resolution, or state of affairs at the end of the scene.
 
-For the keywords field, provide 15-30 specific, descriptive, relevant keywords that would help a vectorized database find this conversation again if something is mentioned. Keywords must be concrete and scene-specific (locations, objects, proper nouns, unique actions). Do not use abstract themes (e.g., "sadness", "love") or character names.
+For the keywords field, provide 15-30 specific, descriptive, relevant keywords that would help a keyworded database find this conversation again if something is mentioned. Keywords must be concrete and scene-specific (locations, objects, proper nouns, unique actions). Do not use abstract themes (e.g., "sadness", "love") or character names.
 
 Ensure you capture ALL important information - comprehensive detail is more important than brevity.
 
@@ -606,7 +862,7 @@ For the content field, create a long and detailed beat-by-beat summary using mar
 
 Include EVERYTHING important for future interactions between {{user}} and {{char}}. Capture all nuance without regurgitating verbatim.
 
-For the keywords field, provide 15-30 specific, descriptive, relevant keywords for vectorized database retrieval. Keywords must be concrete and scene-specific (locations, objects, proper nouns, unique actions). Do not use abstract themes (e.g., "sadness", "love") or character names.
+For the keywords field, provide 15-30 specific, descriptive, relevant keywords for keyworded database retrieval. Keywords must be concrete and scene-specific (locations, objects, proper nouns, unique actions). Do not use abstract themes (e.g., "sadness", "love") or character names.
 
 Return ONLY the JSON, no other text.`,
             'STMemoryBooks_Prompt_synopsis'
@@ -625,7 +881,7 @@ For the content field, write a comprehensive beat summary that captures this sce
 # Scene Summary - Day X - [Title]
 First note the dates/time covered by the scene. Then narrate ALL important story beats/events that happened, key interaction highlights, notable details, memorable quotes, character developments, and outcome. Ensure no important information is lost. [OOC] conversation/interaction is not useful for summaries and should be ignored and excluded. 
 
-For the keywords field, provide 15-30 specific, descriptive, relevant keywords that would help a vectorized database find this summary again if mentioned. Keywords must be concrete and scene-specific (locations, objects, proper nouns, unique actions). Do not use abstract themes (e.g., "sadness", "love") or character names.
+For the keywords field, provide 15-30 specific, descriptive, relevant keywords that would help a keyworded database find this summary again if mentioned. Keywords must be concrete and scene-specific (locations, objects, proper nouns, unique actions). Do not use abstract themes (e.g., "sadness", "love") or character names.
 
 Return ONLY the JSON, no other text.`,
             'STMemoryBooks_Prompt_sumup'
@@ -674,7 +930,7 @@ You must respond with ONLY valid JSON in this exact format:
   "keywords": ["keyword1", "keyword2", "keyword3"]
 }
 
-For the content field, create a beat-by-beat summary in narrative prose. Capture all key plot points that advance the story and character memories that leave a lasting impression, ensuring nothing essential is omitted. This summary will go in a vectorized database, so include: 
+For the content field, create a beat-by-beat summary in narrative prose. Capture all key plot points that advance the story and character memories that leave a lasting impression, ensuring nothing essential is omitted. This summary will go in a keyworded database, so include: 
 
 - Story beats, events, actions and consequences, turning points, and outcomes
 - Key character interactions, character developments, significant dialogue, revelations, emotional impact, and relationships
@@ -703,56 +959,107 @@ Use concrete nouns (e.g., “rice cooker” > “appliance”).
 Only use adjectives/adverbs when they materially affect tone, emotion, or characterization.  
 Focus on **cause → intention → reaction → consequence** chains for clarity and compression.
 
+The \`content\` field must use this structure:
+
 # [Scene Title]
-**Timeline**: (day/time)
+
+**Timeline**: [Most specific date and time supported by the source entries; if unspecified, state unspecified or use relative time.]
 
 ## Story Beats
-- Present all major actions, revelations, and emotional or magical shifts in order.
-- Capture clear cause–effect logic: what triggered what, and why it mattered.
-- Only include plot-affecting interactions and do not capture flavor-only beats.
+
+* Present the major actions, revelations, decisions, and emotional or magical shifts in chronological order.
+* Explain what triggered each development, why characters acted, how others reacted, and what resulted.
+* Include plot-affecting interactions, meaningful shared experiences, and events that changed relationships or future continuity.
+* Omit repeated gestures, room dressing, background objects, and logistical detail unless they directly affected events.
 
 ## Character Dynamics
-- Summarize how each character’s **motives, emotions, and relationships** evolved.
-- Include subtext, tension, or silent implications.
-- Highlight key beats of conflict, vulnerability, trust, or power shifts.
+
+* Explain how motives, emotions, relationships, and power dynamics changed during the summarized period.
+* Capture consequential subtext, tension, vulnerability, trust, conflict, avoidance, affection, resentment, or loyalty.
+* Include small or domestic experiences only when they meaningfully shaped relationship history.
+* Do not repeat plot events unless needed to explain the interpersonal change they caused.
+
+## Important Facts
+
+* Record newly established facts likely to matter later, including plans, risks, abilities, limitations, preferences, promises, secrets, debts, injuries, magical effects, discoveries, and obligations.
+* Exclude casual preferences, scenery, errands, paperwork, clothing, furniture, weather, and other incidental details unless they became continuity-relevant.
 
 ## Key Exchanges
-- Include only pivotal dialogue that defines tone, emotion, or change.
-- Attribute speakers by name; keep quotes short but exact.
-- BE SELECTIVE. Maximum of 8 quotes.
+
+* Include only dialogue that defined a revelation, decision, conflict, emotional shift, or relationship change.
+* Attribute each quotation by speaker name.
+* Include a direct quotation only when the source entries preserve its exact wording. Never reconstruct quoted dialogue from a paraphrase.
+* Preserve distinctive phrases or identifiers, such as “pack for forever” or “dick-measuring contest,” only when they are memorable or relationship-relevant.
+* Include no more than 8 quotations.
 
 ## Outcome & Continuity
-- Detail resulting **decisions, emotional states, physical/magical effects, or narrative consequences**.
-- Include all elements that influence future continuity (knowledge, relationships, injuries, promises, etc.).
-- Note any unresolved threads or foreshadowed elements.
 
-Write compactly but completely — every line should add new information or insight.  
-Synthesize redundant actions or dialogue into unified cause–effect–emotion beats.
-Favor compression over coverage whenever the two conflict; omit anything that can be inferred from context or established characterization.
+* State the final narrative, emotional, relational, physical, or magical condition produced by the events.
+* Record resulting decisions, plans, risks, promises, secrets, injuries, knowledge, and obligations that affect what happens next.
+* Identify unresolved threads, pending conflicts, future consequences, and foreshadowed developments.
+* Do not recap the full sequence of events again.
 
-For the keywords field:
+For the \`keywords\` field:
 
-Generate **15–30 standalone topical keywords** that function as retrieval tags, not micro-summaries. 
-Keywords must be:
-- **Concrete and scene-specific** (locations, objects, proper nouns, unique actions, repeated motifs).
-- **One concept per keyword** — do NOT combine multiple ideas into one keyword.
-- **Useful for retrieval if the user later mentions that noun or action alone**, not only in a specific context.
-- Not {{char}}'s or {{user}}'s names.
-- **Not thematic, emotional, or abstract.** Stop-list: intimacy, vulnerability, trust, dominance, submission, power dynamics, boundaries, jealousy, aftercare, longing, consent, emotional connection.
+Generate **12–20 natural retrieval keywords when the material supports them**. Use fewer rather than padding the list with weak terms. Keywords are search hooks, not miniature summaries or evidence notes.
 
-Avoid:
-- Overly specific compound keywords (“David Tokyo marriage”).
-- Narrative or plot-summary style keywords (“art dealer date fail”).
-- Keywords that contain multiple facts or descriptors.
-- Keywords that only make sense when the whole scene is remembered.
+Prioritize:
 
-Prefer:
-- Proper nouns (e.g., "Chinatown", "Ritz-Carlton bar").
-- Specific physical objects ("CPAP machine", "chocolate chip cookies").
-- Distinctive actions ("cookie baking", "piano apology").
-- Unique phrases or identifiers from the scene used by characters ("pack for forever", "dick-measuring contest").
+1. **Stable named entities**: people other than {{char}} or {{user}}, places, organizations, events, documents, factions, spells, or distinctive objects.
+2. **Major continuity anchors**: plans, threats, secrets, discoveries, investigations, conflicts, injuries, promises, relationship changes, and unresolved threads.
+3. **Memorable moments**: meaningful shared activities, gifts, food, rituals, jokes, care-taking, arguments, or domestic events.
+4. **Independent secondary hooks** that retrieve a separate part of the summarized material.
 
-Your goal: **keywords should fire when the noun/action is mentioned alone**, not only when paired with a specific person or backstory.
+### Keyword construction
+
+Use the shortest distinctive wording likely to remain recognizable under paraphrasing or reversed word order.
+
+Examples:
+
+* \`Gala of the Silver Rose\` or \`Silver Rose Gala\` → \`Silver Rose\`
+* \`Bromet Response SA\` → \`Bromet\`
+* \`Château D’Aramitz\`, Comte D’Aramitz, or a plan involving him → \`D’Aramitz\`
+* Keep \`Althof Ledger\` when both words are required to identify the object.
+
+Prefer one central named entity when it already covers several related events:
+
+* \`D’Aramitz rescue plan\` → \`D’Aramitz\`
+* \`Bromet hidden contractors\` → \`Bromet\`
+* \`Althof Ledger substitution\` → \`Althof Ledger\`
+
+Retain a modified phrase only when it provides an independent retrieval route not covered by the central entity:
+
+* \`fake caterers\`
+* \`ledger facsimile\`
+* \`safehouse breakfast\`
+* \`counter-surveillance camera\`
+
+When several clues establish one conclusion, usually tag the resulting finding rather than each supporting clue:
+
+* Uniforms, badges, and vehicle access → \`fake caterers\`
+* Payments and company records → \`Bromet\`
+* A covert tactical team at the gala → \`suspected assassination\`
+* A rental used for equipment and disguises → \`staging villa\`
+
+A supporting clue may remain only when it is memorable, likely to recur, or independently useful for retrieval.
+
+Keywords should normally:
+
+* Contain 1–4 words.
+* Use ordinary noun phrases.
+* Identify genuinely distinct parts of the summary.
+* Remain stable if later descriptions use different wording.
+
+Exclude:
+
+* Incidental scenery or props.
+* Exact times, quantities, card digits, invoice wording, or administrative details.
+* Generic themes such as \`danger\`, \`romance\`, or \`conversation\`.
+* Unsupported conclusions.
+* Sentence-like evidence descriptions.
+* Multiple keywords that merely restate or narrow the same named entity.
+
+Before returning the JSON, silently verify that each keyword is natural to search, continuity-relevant, stable under paraphrasing, independently useful, and no longer than necessary.
 
 Return ONLY the JSON — no additional text.`,
             'STMemoryBooks_Prompt_comprehensive'
@@ -803,6 +1110,21 @@ export async function getEffectivePrompt(profile) {
     if (!profile) {
         return getDefaultPrompt();
     }
+    const targetKind = String(profile?.stmbPromptTarget || '').trim().toLowerCase();
+    if (profile.useGroupSpecificPrompts && targetKind) {
+        if (targetKind === 'group') {
+            if (typeof profile.groupPrompt === 'string' && profile.groupPrompt.trim()) {
+                return profile.groupPrompt;
+            }
+            return await getCustomPresetPrompt(profile.groupPreset || 'group');
+        }
+        if (targetKind === 'character' || targetKind === 'char') {
+            if (typeof profile.characterPrompt === 'string' && profile.characterPrompt.trim()) {
+                return profile.characterPrompt;
+            }
+            return await getCustomPresetPrompt(profile.characterPreset || 'char');
+        }
+    }
     if (profile.preset) {
         return await getCustomPresetPrompt(profile.preset);
     } else {
@@ -833,6 +1155,63 @@ export function validateProfile(profile) {
     }
     
     return true;
+}
+
+/**
+ * Normalize ordered additional lorebook-entry references stored on a profile.
+ * @param {Array} refs
+ * @returns {{lorebookName: string, uid: string}[]}
+ */
+export function normalizeAdditionalContextEntries(refs) {
+    if (!Array.isArray(refs)) return [];
+
+    const seen = new Set();
+    const normalized = [];
+    for (const ref of refs) {
+        if (!ref || typeof ref !== 'object') continue;
+        const lorebookName = String(ref.lorebookName || '').trim();
+        const uid = String(ref.uid ?? '').trim();
+        if (!lorebookName || !uid) continue;
+
+        const dedupeKey = `${lorebookName}\u0000${uid}`;
+        if (seen.has(dedupeKey)) continue;
+        seen.add(dedupeKey);
+        normalized.push({ lorebookName, uid });
+    }
+    return normalized;
+}
+
+export function generateProfileKey() {
+    return `profile-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+/**
+ * Get the user-facing lorebook entry title used by STMB pickers/prompts.
+ * @param {Object} entry
+ * @param {string|number} uidFallback
+ * @returns {string}
+ */
+export function getLorebookEntryDisplayName(entry, uidFallback = '') {
+    const comment = String(entry?.comment ?? '').trim();
+    if (comment) return comment;
+    const name = String(entry?.name ?? '').trim();
+    if (name) return name;
+    const uid = String(entry?.uid ?? uidFallback ?? '').trim();
+    return uid ? `Entry ${uid}` : 'Untitled entry';
+}
+
+/**
+ * Find a lorebook entry by UID, accepting either object key or entry.uid.
+ * @param {Object} lorebookData
+ * @param {string|number} uid
+ * @returns {Object|null}
+ */
+export function getLorebookEntryByUid(lorebookData, uid) {
+    const uidString = String(uid ?? '');
+    if (!uidString || !lorebookData?.entries) return null;
+    return lorebookData.entries[uidString]
+        || Object.values(lorebookData.entries).find(entry => String(entry?.uid ?? '') === uidString)
+        || null;
 }
 
 /**
@@ -929,6 +1308,31 @@ export function parseTemperature(input) {
 }
 
 /**
+ * Parse persisted boolean-like profile flags without treating non-empty strings as true.
+ * @param {boolean|string|number} input - Boolean-like input
+ * @param {boolean} fallback - Value to use when input is not boolean-like
+ * @returns {boolean} Parsed boolean value
+ */
+export function parseBooleanFlag(input, fallback = false) {
+    if (typeof input === 'boolean') {
+        return input;
+    }
+
+    if (typeof input === 'string') {
+        const normalized = input.trim().toLowerCase();
+        if (normalized === 'true' || normalized === '1') return true;
+        if (normalized === 'false' || normalized === '0') return false;
+    }
+
+    if (typeof input === 'number') {
+        if (input === 1) return true;
+        if (input === 0) return false;
+    }
+
+    return fallback;
+}
+
+/**
  * Format preset name for display
  * @param {string} presetName - Internal preset name
  * @returns {string} Display-friendly name
@@ -954,30 +1358,51 @@ export function formatPresetDisplayName(presetName) {
  * @param {number} [data.position=0] - The lorebook entry position.
  * @param {string} [data.orderMode='auto'] - The ordering mode.
  * @param {number} [data.orderValue=100] - The manual order value.
+ * @param {number} [data.reverseStart=9999] - Reverse ordering start (100-9999).
  * @param {boolean} [data.preventRecursion=true] - The prevent recursion flag.
- * @param {boolean} [data.delayUntilRecursion=true] - The delay until recursion flag.
+ * @param {boolean} [data.delayUntilRecursion=false] - The delay until recursion flag.
+ * @param {boolean} [data.skipStructuredOutput=false] - Whether to skip provider structured-output requests.
+ * @param {boolean} [data.useChatCompletionService=false] - Whether to use SillyTavern's ChatCompletionService for eligible requests.
+ * @param {string} [data.chatCompletionPreset=''] - Optional SillyTavern chat completion preset for ChatCompletionService.processRequest.
+ * @param {boolean} [data.reverseProxy=false] - Whether this profile should use reverse proxy settings.
  * @returns {Object} A structured and validated profile object.
  */
 export function createProfileObject(data = {}) {
-    let temperature = parseTemperature(data.temperature);
+    const inputConn = (data.connection && typeof data.connection === 'object') ? data.connection : {};
+
+    let temperature = parseTemperature(data.temperature ?? inputConn.temperature);
     if (temperature === null) {
         temperature = 0.7;
     }
 
     const profile = {
+        profileKey: (typeof data.profileKey === 'string' && data.profileKey.trim())
+            ? data.profileKey.trim()
+            : generateProfileKey(),
         name: (data.name || 'New Profile').trim(),
         connection: {
-            api: data.api || 'openai',
+            api: data.api || inputConn.api || 'openai',
             temperature: temperature,
         },
         prompt: (data.prompt || '').trim(),
         preset: data.preset || '',
+        useGroupSpecificPrompts: parseBooleanFlag(data.useGroupSpecificPrompts, false),
+        groupPreset: String(data.groupPreset || 'group').trim() || 'group',
+        characterPreset: String(data.characterPreset || data.charPreset || 'char').trim() || 'char',
         constVectMode: data.constVectMode || 'link',
         position: data.position !== undefined ? Number(data.position) : 0,
         orderMode: data.orderMode || 'auto',
         orderValue: data.orderValue !== undefined ? Number(data.orderValue) : 100,
+        reverseStart: (() => {
+            const rawInput = data.reverseStart;
+            if (rawInput === '' || rawInput === null || rawInput === undefined) return 9999;
+            const parsed = Number(rawInput);
+            const n = Number.isFinite(parsed) ? Math.trunc(parsed) : 9999;
+            return clampInt(n, 100, 9999);
+        })(),
         preventRecursion: data.preventRecursion !== undefined ? data.preventRecursion : true,
-        delayUntilRecursion: data.delayUntilRecursion !== undefined ? data.delayUntilRecursion : true,
+        delayUntilRecursion: data.delayUntilRecursion !== undefined ? data.delayUntilRecursion : false,
+        skipStructuredOutput: parseBooleanFlag(data.skipStructuredOutput, false),
     };
 
     // Preserve builtin marker for the STMB-required "Current SillyTavern Settings" profile.
@@ -985,25 +1410,45 @@ export function createProfileObject(data = {}) {
         profile.isBuiltinCurrentST = true;
     }
 
+    if (!profile.isBuiltinCurrentST) {
+        const additionalContextEntries = normalizeAdditionalContextEntries(data.additionalContextEntries);
+        if (additionalContextEntries.length > 0) {
+            profile.additionalContextEntries = additionalContextEntries;
+        }
+    }
+
+    if (profile.connection.api !== 'full-manual') {
+        profile.useChatCompletionService = parseBooleanFlag(data.useChatCompletionService, false);
+        const chatCompletionPreset = String(data.chatCompletionPreset || '').trim();
+        if (profile.useChatCompletionService && chatCompletionPreset) {
+            profile.chatCompletionPreset = chatCompletionPreset;
+        }
+    }
+
     // Set titleFormat if explicitly provided, or if it's not a dynamic profile
     if (data.titleFormat || !data.isDynamicProfile) {
         profile.titleFormat = data.titleFormat || '[000] - {{title}}';
     }
 
-    const model = (data.model || '').trim();
+    const model = (data.model ?? inputConn.model ?? '').trim();
     if (model) {
         profile.connection.model = model;
     }
 
     // Add endpoint and apiKey for full-manual configuration
-    const endpoint = (data.endpoint || '').trim();
+    const endpoint = (data.endpoint ?? inputConn.endpoint ?? '').trim();
     if (endpoint) {
         profile.connection.endpoint = endpoint;
     }
 
-    const apiKey = (data.apiKey || '').trim();
+    const apiKey = (data.apiKey ?? inputConn.apiKey ?? '').trim();
     if (apiKey) {
         profile.connection.apiKey = apiKey;
+    }
+
+    const reverseProxy = data.reverseProxy ?? inputConn.reverseProxy;
+    if (reverseProxy) {
+        profile.connection.reverseProxy = true;
     }
 
     // A profile should have a preset OR a custom prompt. The custom prompt takes precedence.
@@ -1027,4 +1472,92 @@ export function createProfileObject(data = {}) {
     } catch {}
 
     return profile;
+}
+
+export class StmbCancelledError extends Error {
+    constructor(message = 'STMB generation stopped') {
+        super(message);
+        this.name = 'StmbCancelledError';
+    }
+}
+
+let stmbStopEpoch = 0;
+let stmbInFlightNextId = 1;
+const stmbInFlight = new Map(); // id -> { id, label, controller, epoch, startedAt }
+
+export function getStmbStopEpoch() {
+    return stmbStopEpoch;
+}
+
+export function getStmbInFlightCount() {
+    return stmbInFlight.size;
+}
+
+export function isStmbStopError(err) {
+    if (!err) return false;
+    if (err instanceof StmbCancelledError) return true;
+    const name = String(err.name || '');
+    if (name === 'AbortError') return true;
+    // Some code paths throw a plain Error('Cancelled') or similar.
+    const msg = String(err.message || '');
+    return msg === 'Cancelled' || msg === 'Canceled' || msg.includes('aborted');
+}
+
+export function throwIfStmbStopped(epoch) {
+    if (epoch !== stmbStopEpoch) {
+        throw new StmbCancelledError();
+    }
+}
+
+/**
+ * Register an in-flight STMB task and return a guard object with an AbortSignal.
+ * - Call `finish()` in a finally block.
+ * - Call `throwIfStopped()` before applying any results.
+ */
+export function createStmbInFlightTask(label = 'STMB') {
+    const id = stmbInFlightNextId++;
+    const epoch = stmbStopEpoch;
+    const controller = new AbortController();
+    const entry = { id, label: String(label || 'STMB'), controller, epoch, startedAt: Date.now() };
+    stmbInFlight.set(id, entry);
+
+    const finish = () => {
+        stmbInFlight.delete(id);
+    };
+
+    const throwIfStopped = () => {
+        if (controller.signal.aborted || epoch !== stmbStopEpoch) {
+            throw new StmbCancelledError();
+        }
+    };
+
+    return {
+        id,
+        label: entry.label,
+        epoch,
+        signal: controller.signal,
+        abort: (reason = 'stmb-stop') => {
+            try {
+                controller.abort(reason);
+            } catch { /* noop */ }
+        },
+        throwIfStopped,
+        finish,
+    };
+}
+
+/**
+ * Panic-stop: abort all tracked in-flight STMB tasks and advance the stop epoch.
+ * Returns how many tasks were in-flight at the moment of stopping.
+ */
+export function stmbStopAllInFlight(reason = 'stmb-stop') {
+    stmbStopEpoch++;
+    const entries = Array.from(stmbInFlight.values());
+    stmbInFlight.clear();
+    for (const e of entries) {
+        try {
+            e.controller.abort(reason);
+        } catch { /* noop */ }
+    }
+    return { stoppedCount: entries.length, epoch: stmbStopEpoch };
 }
